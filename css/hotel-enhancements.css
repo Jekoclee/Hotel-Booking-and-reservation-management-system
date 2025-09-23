@@ -1,0 +1,287 @@
+/* ===== MODERN HOTEL UI ENHANCEMENTS ===== */
+
+/* Hero Section Improvements */
+.hero-section {
+    background: url('../images/LCR.jpg') center center / cover no-repeat fixed !important;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Remove color overlays and shimmer effect over the hero background */
+.hero-section::before {
+    content: none;
+    display: none;
+}
+
+@keyframes shimmer {
+    0% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.hero-text {
+    color: white;
+    font-size: 4rem;
+    font-family: 'Playfair Display', serif;
+    text-shadow: 3px 3px 12px rgba(0, 0, 0, 0.7);
+    text-align: center;
+    margin-bottom: 30px;
+    /* keep entrance animation only */
+    animation: fadeInUp 1s ease-out;
+    z-index: 2;
+    position: relative;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced Room Cards */
+.room-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(30, 64, 175, 0.1);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.room-card:hover {
+    transform: translateY(-15px) scale(1.02);
+    box-shadow: 0 25px 50px rgba(30, 64, 175, 0.2);
+}
+
+.room-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.05), rgba(245, 158, 11, 0.05));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+    pointer-events: none; /* ensure overlay effect never blocks clicks */
+}
+
+.room-card:hover::before {
+    opacity: 1;
+}
+
+.room-image {
+    position: relative;
+    overflow: hidden;
+    height: 200px;
+}
+
+.room-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.room-card:hover .room-image img {
+    transform: scale(1.1);
+}
+
+/* Price Badge Enhancement */
+.price-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-dark));
+    color: white;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    z-index: 2;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Keep price badge above gradient overlay */
+.rooms-page .price-badge { z-index: 5; }
+
+/* Enhanced Facilities Section */
+.facilities-slider {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    position: relative;
+}
+
+.facilities-slider::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23e2e8f0" opacity="0.3"/><circle cx="75" cy="75" r="1" fill="%23cbd5e1" opacity="0.2"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+    opacity: 0.5;
+}
+
+.facility-card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px 20px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(30, 64, 175, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.facility-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border: none;
+    border-radius: 30px;
+    padding: 10px 25px;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(30, 64, 175, 0.3);
+}
+
+/* Floating Elements Animation */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+.floating-element {
+    animation: float 6s ease-in-out infinite;
+}
+
+/* Responsive Enhancements */
+@media (max-width: 768px) {
+    .hero-text {
+        font-size: 2.5rem;
+    }
+    
+    .booking-box {
+        padding: 25px;
+        margin: 20px;
+    }
+    
+    .room-card {
+        margin-bottom: 20px;
+    }
+    
+    .facility-card {
+        padding: 20px 15px;
+    }
+}
+
+/* Loading Animation */
+.loading-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer-loading 1.5s infinite;
+}
+
+@keyframes shimmer-loading {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Scroll Reveal Animation */
+.reveal {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: all 0.6s ease;
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Room image container no longer has overlay CTA buttons */
+.rooms-page .room-image { position: relative; }
+
+/* Remove overlay CTA buttons if any leftover markup appears */
+.rooms-page .room-image .cta-buttons { display: none !important; }
+
+/* Remove dark hover overlay since we don't need to boost contrast for hidden buttons */
+.rooms-page .room-image::after { display: none !important; content: none !important; }
+
+/* Show the original room-actions under amenities (ensure proper spacing) */
+.rooms-page .room-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+/* Touch devices don't need overlay CTA either */
+@media (hover: none) {
+    .rooms-page .room-image .cta-buttons { display: none !important; }
+    .rooms-page .room-image::after { display: none !important; }
+}
+
+/* Subtle white fading background for pages using bg-white (e.g., facilities.php) */
+body.bg-white {
+  background-color: #ffffff !important; /* preserve base white */
+  /* Softer diagonal (45deg) fade */
+  background-image: linear-gradient(135deg, #ffffff 0%, #fafbfc 60%, #f1f5f9 100%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Ensure long pages keep the gradient feeling subtle and not tiled */
+@media (max-width: 768px) {
+  body.bg-white {
+    background-image: linear-gradient(135deg, #ffffff 0%, #fcfdff 60%, #f6f9fc 100%);
+  }
+}

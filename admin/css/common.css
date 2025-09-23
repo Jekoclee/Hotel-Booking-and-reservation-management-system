@@ -1,0 +1,104 @@
+:root{
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --secondary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  --light-bg: rgba(255, 255, 255, 0.95);
+  --shadow-light: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --shadow-heavy: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.custom-bg {
+  background: var(--primary-gradient);
+}
+
+.custom-alert{
+  position: fixed;
+  top: 80px;
+  right: 25px;
+  z-index: 1050;
+  border-radius: 15px;
+  box-shadow: var(--shadow-light);
+  backdrop-filter: blur(10px);
+}
+
+#dashboard-menu{
+  position: fixed;
+  height: 100%;
+  z-index: 11;
+  background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%) !important;
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced Hover Effects */
+.hover-link {
+  transition: all 0.3s ease;
+  border-radius: 10px !important;
+  margin: 5px 0;
+}
+
+.hover-link:hover {
+  background: var(--primary-gradient) !important;
+  color: #fff !important;
+  transform: translateX(5px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Modern Card Styling */
+.modern-card {
+  background: var(--light-bg);
+  border-radius: 20px;
+  box-shadow: var(--shadow-light);
+  backdrop-filter: blur(10px);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.modern-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-heavy);
+}
+
+/* Responsive Design Improvements */
+@media screen and (max-width: 991px) {
+  #dashboard-menu {
+    width: 100%;
+    height: auto;
+    position: relative;
+    background: linear-gradient(90deg, #2c3e50 0%, #34495e 100%) !important;
+  }
+  
+  #main-content {
+    margin-top: 0;
+  }
+  
+  .main-content {
+    margin: 10px !important;
+    padding: 20px !important;
+    border-radius: 15px !important;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .main-content {
+    margin: 5px !important;
+    padding: 15px !important;
+    border-radius: 10px !important;
+  }
+  
+  .stat-card .card-text {
+    font-size: 1.8rem !important;
+  }
+  
+  .dashboard-title {
+    font-size: 1.8rem !important;
+  }
+}
+
+/* Admin Login Form positioning (moved from inline style) */
+div.login-form {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+}
