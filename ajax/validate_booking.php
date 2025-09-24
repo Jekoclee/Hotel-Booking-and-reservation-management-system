@@ -2,7 +2,18 @@
 require('../admin/inc/db_config.php');
 require('../admin/inc/essentials.php');
 
-header('Content-Type: application/json');
+// Ensure clean JSON output
+if (function_exists('ini_set')) {
+    ini_set('display_errors', '0');
+}
+error_reporting(0);
+while (ob_get_level()) {
+    ob_end_clean();
+}
+header('Content-Type: application/json; charset=UTF-8');
+// Prevent caching so UI always sees latest availability after admin actions
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
 
 // Check if request method is POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -11,7 +22,38 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Get POST data
-$input = json_decode(file_get_contents('php://input'), true);
+// Get request body and attempt JSON decode, with fallbacks to form data
+$raw = file_get_contents('php://input');
+$input = null;
+if (is_string($raw) && $raw !== '') {
+    $input = json_decode($raw, true);
+}
+if (!$input || !is_array($input)) {
+    if (!empty($_POST)) {
+        $input = $_POST;
+    } else {
+        // Try parse_str for URL-encoded bodies
+        $tmp = [];
+        if (is_string($raw)) {
+            parse_str($raw, $tmp);
+        }
+        if (!empty($tmp)) {
+            $input = $tmp;
+        }
+    }
+}
+if (!$input || !is_array($input)) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid JSON data',
+        'debug' => [
+            'content_type' => $_SERVER['CONTENT_TYPE'] ?? '',
+            'raw_len' => is_string($raw) ? strlen($raw) : 0,
+            'raw_preview' => is_string($raw) ? substr($raw, 200) : ''
+        ]
+    ]);
+    exit;
+}
 
 if (!$input) {
     echo json_encode(['success' => false, 'message' => 'Invalid JSON data']);
@@ -58,6 +100,7 @@ try {
               FROM bookings 
               WHERE room_id = ? 
               AND booking_status IN ('confirmed', 'pending')
+              AND removed = 0
               AND (
                   (check_in <= ? AND check_out > ?) OR
                   (check_in < ? AND check_out >= ?) OR
@@ -69,11 +112,11 @@ try {
         'issssss',
         $room_id,
         $checkin_date,
-        $checkin_date,  // Check if existing booking starts before or on our checkin and ends after our checkin
-        $checkout_date,
-        $checkout_date, // Check if existing booking starts before our checkout and ends on or after our checkout
         $checkin_date,
-        $checkout_date   // Check if existing booking is completely within our date range
+        $checkout_date,
+        $checkout_date,
+        $checkin_date,
+        $checkout_date
     );
 
     $stmt->execute();

@@ -17,7 +17,30 @@ if (!isset($_SESSION['login']) || $_SESSION['login'] != true) {
     redirect('index.php');
 }
 
-// Get room ID from URL parameter
+// Optional: Load existing booking by booking_id for logged-in user
+$existing_booking = null;
+if (isset($_GET['booking_id']) && $_GET['booking_id'] !== '') {
+    $bkid = filteration($_GET['booking_id']);
+    $uid = (int)($_SESSION['uId'] ?? 0);
+    if ($uid > 0) {
+        $stmt = $con->prepare("SELECT b.*, r.name AS room_name, r.price AS room_price FROM bookings b LEFT JOIN rooms r ON b.room_id = r.id WHERE b.booking_id=? AND b.user_id=? LIMIT 1");
+        $stmt->bind_param('si', $bkid, $uid);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($res && $res->num_rows === 1) {
+            $existing_booking = $res->fetch_assoc();
+            // Prime GET params so downstream logic uses booking values
+            $_GET['room_id'] = $existing_booking['room_id'];
+            $_GET['check_in'] = $existing_booking['check_in'];
+            $_GET['check_out'] = $existing_booking['check_out'];
+            $_GET['adults'] = $existing_booking['adults'];
+            $_GET['children'] = $existing_booking['children'];
+        }
+        $stmt->close();
+    }
+}
+
+// Get room ID from URL parameter (possibly set from booking_id above)
 $room_id = isset($_GET['room_id']) ? filteration($_GET['room_id']) : null;
 
 // Fetch room data if room_id is provided
@@ -452,8 +475,8 @@ $nights = $checkin->diff($checkout)->days;
     <div class="container my-5">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <!-- Success Message -->
-                <div class="text-center mb-4">
+                <!-- Success Message (Final Step Only) -->
+                <div id="final-confirmation" class="text-center mb-4" style="display:none;">
                     <div class="success-icon mb-3">
                         <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
                     </div>
@@ -461,247 +484,250 @@ $nights = $checkin->diff($checkout)->days;
                     <p class="text-muted fs-5">Your reservation has been successfully confirmed. Please save this confirmation for your records.</p>
                 </div>
 
-                <!-- Room Gallery -->
-                <div class="room-gallery mb-4">
-                    <div id="roomCarousel" class="carousel slide" data-bs-ride="carousel">
-                        <div class="carousel-inner">
-                            <?php
-                            // Fallback room images array
-                            $fallback_images = [
-                                "IMG_12341.jpg",
-                                "IMG_12633.jpg",
-                                "IMG_19430.jpg",
-                                "IMG_25323.jpg",
-                                "IMG_29030.jpg",
-                                "IMG_41616.jpg",
-                                "IMG_49697.jpg",
-                                "IMG_57663.jpg",
-                                "IMG_63903.jpg",
-                                "IMG_67520.jpg",
-                                "IMG_72980.jpg",
-                                "IMG_76227.jpg",
-                                "IMG_76731.jpg",
-                                "IMG_99925.jpg",
-                                "room1.jpg"
-                            ];
+                <!-- Step 1: Review Section -->
+                <div id="step-review">
+                    <!-- Room Gallery -->
+                    <div class="room-gallery mb-4">
+                        <div id="roomCarousel" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                <?php
+                                // Fallback room images array
+                                $fallback_images = [
+                                    "IMG_12341.jpg",
+                                    "IMG_12633.jpg",
+                                    "IMG_19430.jpg",
+                                    "IMG_25323.jpg",
+                                    "IMG_29030.jpg",
+                                    "IMG_41616.jpg",
+                                    "IMG_49697.jpg",
+                                    "IMG_57663.jpg",
+                                    "IMG_63903.jpg",
+                                    "IMG_67520.jpg",
+                                    "IMG_72980.jpg",
+                                    "IMG_76227.jpg",
+                                    "IMG_76731.jpg",
+                                    "IMG_99925.jpg",
+                                    "room1.jpg"
+                                ];
 
-                            if ($room_id) {
-                                $img_q = mysqli_query($con, "SELECT * FROM `room_images` WHERE `room_id`='{$room_data['id']}'");
+                                if ($room_id) {
+                                    $img_q = mysqli_query($con, "SELECT * FROM `room_images` WHERE `room_id`='{$room_data['id']}'");
 
-                                if (mysqli_num_rows($img_q) > 0) {
-                                    // Display images from database
-                                    $active_class = 'active';
-                                    while ($img_res = mysqli_fetch_assoc($img_q)) {
-                                        echo "
-                                    <div class='carousel-item $active_class'>
-                                        <img src='" . ROOMS_IMG_PATH . $img_res['image'] . "' class='d-block w-100' alt='Room Image' style='height: 300px; object-fit: cover;'>
-                                    </div>";
-                                        $active_class = '';
+                                    if (mysqli_num_rows($img_q) > 0) {
+                                        // Display images from database
+                                        $active_class = 'active';
+                                        while ($img_res = mysqli_fetch_assoc($img_q)) {
+                                            echo "
+                                        <div class='carousel-item $active_class'>
+                                            <img src='" . ROOMS_IMG_PATH . $img_res['image'] . "' class='d-block w-100' alt='Room Image' style='height: 300px; object-fit: cover;'>
+                                        </div>";
+                                            $active_class = '';
+                                        }
+                                    } else {
+                                        // Display fallback images when no database images exist
+                                        $active_class = 'active';
+                                        // Use room ID to select consistent images for each room
+                                        $start_index = ($room_data['id'] - 1) % count($fallback_images);
+
+                                        // Show 5 different images for variety
+                                        for ($i = 0; $i < 5; $i++) {
+                                            $image_index = ($start_index + $i) % count($fallback_images);
+                                            $room_img = ROOMS_IMG_PATH . $fallback_images[$image_index];
+                                            echo "
+                                        <div class='carousel-item $active_class'>
+                                            <img src='$room_img' class='d-block w-100' alt='Room Image' style='height: 300px; object-fit: cover;'>
+                                        </div>";
+                                            $active_class = '';
+                                        }
                                     }
                                 } else {
-                                    // Display fallback images when no database images exist
-                                    $active_class = 'active';
-                                    // Use room ID to select consistent images for each room
-                                    $start_index = ($room_data['id'] - 1) % count($fallback_images);
-
-                                    // Show 5 different images for variety
-                                    for ($i = 0; $i < 5; $i++) {
-                                        $image_index = ($start_index + $i) % count($fallback_images);
-                                        $room_img = ROOMS_IMG_PATH . $fallback_images[$image_index];
-                                        echo "
-                                    <div class='carousel-item $active_class'>
-                                        <img src='$room_img' class='d-block w-100' alt='Room Image' style='height: 300px; object-fit: cover;'>
+                                    // Default image when no room_id
+                                    echo "
+                                    <div class='carousel-item active'>
+                                        <img src='" . ROOMS_IMG_PATH . "room1.jpg' class='d-block w-100' alt='Room Image' style='height: 300px; object-fit: cover;'>
                                     </div>";
-                                        $active_class = '';
-                                    }
                                 }
-                            } else {
-                                // Default image when no room_id
-                                echo "
-                                <div class='carousel-item active'>
-                                    <img src='" . ROOMS_IMG_PATH . "room1.jpg' class='d-block w-100' alt='Room Image' style='height: 300px; object-fit: cover;'>
-                                </div>";
-                            }
-                            ?>
+                                ?>
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
                         </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
                     </div>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="fw-bold mb-0">Booking Details</h4>
-                    <span class="badge bg-success fs-6">Confirmed</span>
-                </div>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold mb-0">Booking Details</h4>
+                        <span class="badge bg-success fs-6">Review</span>
+                    </div>
 
-                <div class="row">
-                    <!-- Left Column - Room Info -->
-                    <div class="col-md-8">
-                        <div class="room-info-card p-4 mb-4">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                    <h3 class="fw-bold mb-2"><?= $booking_data['room_name'] ?></h3>
-                                    <div class="d-flex align-items-center mb-2">
-                                        <div class="rating me-3">
-                                            <i class="bi bi-star-fill text-warning"></i>
-                                            <i class="bi bi-star-fill text-warning"></i>
-                                            <i class="bi bi-star-fill text-warning"></i>
-                                            <i class="bi bi-star-fill text-warning"></i>
-                                            <i class="bi bi-star text-warning"></i>
-                                            <span class="ms-2 text-muted">(4.2)</span>
+                    <div class="row">
+                        <!-- Left Column - Room Info -->
+                        <div class="col-md-8">
+                            <div class="room-info-card p-4 mb-4">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h3 class="fw-bold mb-2"><?= $booking_data['room_name'] ?></h3>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="rating me-3">
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                <i class="bi bi-star text-warning"></i>
+                                                <span class="ms-2 text-muted">(4.2)</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="price-badge">
-                                    ₱<?= number_format($booking_data['room_price'], 0) ?>
-                                    <small class="text-muted">/night</small>
-                                </div>
-                            </div>
-
-                            <!-- Room Features -->
-                            <div class="room-features mb-4">
-                                <h5 class="fw-bold mb-3">Room Features</h5>
-                                <div class="row">
-                                    <?php if ($room_id && isset($features_data) && !empty($features_data)): ?>
-                                        <?php foreach ($features_data as $feature): ?>
-                                            <div class="col-md-6 mb-2">
-                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                                <?= $feature ?>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <div class="col-12">
-                                            <i class="bi bi-info-circle text-muted me-2"></i>
-                                            No specific features listed
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-
-                            <!-- Room Facilities - REMOVED FROM UI DISPLAY -->
-                            <!--
-                            <!-- Room Facilities - REMOVED FROM UI DISPLAY -->
-                            <!--
-                            <div class="room-facilities mb-4">
-                                <h5 class="fw-bold mb-3">Facilities</h5>
-                                <div class="row">
-                                    <?php if ($room_id && isset($facilities_data) && !empty($facilities_data)): ?>
-                                        <?php foreach ($facilities_data as $facility): ?>
-                                            <div class="col-md-6 mb-2">
-                                                <i class="bi bi-wifi text-primary me-2"></i>
-                                                <?= $facility ?>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <div class="col-12">
-                                            <i class="bi bi-info-circle text-muted me-2"></i>
-                                            Standard hotel facilities available
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                            -->
-                            -->
-                            <div class="room-facilities mb-4">
-                                <h5 class="fw-bold mb-3">Facilities</h5>
-                                <div class="row">
-                                    <?php if ($room_id && isset($facilities_data) && !empty($facilities_data)): ?>
-                                        <?php foreach ($facilities_data as $facility): ?>
-                                            <div class="col-md-6 mb-2">
-                                                <i class="bi bi-wifi text-primary me-2"></i>
-                                                <?= $facility ?>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <div class="col-12">
-                                            <i class="bi bi-info-circle text-muted me-2"></i>
-                                            Standard hotel facilities available
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-
-                            <!-- Room Capacity -->
-                            <div class="room-capacity">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="capacity-item">
-                                            <i class="bi bi-people-fill text-info me-2"></i>
-                                            <strong>Capacity:</strong> <?= $booking_data['adults'] ?> Adults, <?= $booking_data['children'] ?> Children
-                                        </div>
+                                    <div class="price-badge">
+                                        ₱<?= number_format($booking_data['room_price'], 0) ?>
+                                        <small class="text-muted">/night</small>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="capacity-item">
-                                            <i class="bi bi-arrows-fullscreen text-info me-2"></i>
-                                            <strong>Area:</strong> 450 sq ft
+                                </div>
+
+                                <!-- Room Features -->
+                                <div class="room-features mb-4">
+                                    <h5 class="fw-bold mb-3">Room Features</h5>
+                                    <div class="row">
+                                        <?php if ($room_id && isset($features_data) && !empty($features_data)): ?>
+                                            <?php foreach ($features_data as $feature): ?>
+                                                <div class="col-md-6 mb-2">
+                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                    <?= $feature ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <div class="col-12">
+                                                <i class="bi bi-info-circle text-muted me-2"></i>
+                                                No specific features listed
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <!-- Room Facilities - REMOVED FROM UI DISPLAY -->
+                                <!--
+                                <!-- Room Facilities - REMOVED FROM UI DISPLAY -->
+                                <!--
+                                <div class="room-facilities mb-4">
+                                    <h5 class="fw-bold mb-3">Facilities</h5>
+                                    <div class="row">
+                                        <?php if ($room_id && isset($facilities_data) && !empty($facilities_data)): ?>
+                                            <?php foreach ($facilities_data as $facility): ?>
+                                                <div class="col-md-6 mb-2">
+                                                    <i class="bi bi-wifi text-primary me-2"></i>
+                                                    <?= $facility ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <div class="col-12">
+                                                <i class="bi bi-info-circle text-muted me-2"></i>
+                                                Standard hotel facilities available
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                -->
+                                -->
+                                <div class="room-facilities mb-4">
+                                    <h5 class="fw-bold mb-3">Facilities</h5>
+                                    <div class="row">
+                                        <?php if ($room_id && isset($facilities_data) && !empty($facilities_data)): ?>
+                                            <?php foreach ($facilities_data as $facility): ?>
+                                                <div class="col-md-6 mb-2">
+                                                    <i class="bi bi-wifi text-primary me-2"></i>
+                                                    <?= $facility ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <div class="col-12">
+                                                <i class="bi bi-info-circle text-muted me-2"></i>
+                                                Standard hotel facilities available
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <!-- Room Capacity -->
+                                <div class="room-capacity">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="capacity-item">
+                                                <i class="bi bi-people-fill text-info me-2"></i>
+                                                <strong>Capacity:</strong> <?= $booking_data['adults'] ?> Adults, <?= $booking_data['children'] ?> Children
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="capacity-item">
+                                                <i class="bi bi-arrows-fullscreen text-info me-2"></i>
+                                                <strong>Area:</strong> 450 sq ft
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Right Column - Booking Summary -->
-                    <div class="col-md-4">
-                        <div class="booking-summary-card p-4">
-                            <h5 class="fw-bold mb-3">Booking Summary</h5>
+                        <!-- Right Column - Booking Summary -->
+                        <div class="col-md-4">
+                            <div class="booking-summary-card p-4">
+                                <h5 class="fw-bold mb-3">Booking Summary</h5>
 
-                            <div class="booking-info mb-3">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted">Check-in:</span>
-                                    <span class="fw-bold"><?= date('M j, Y', strtotime($booking_data['check_in'])) ?></span>
+                                <div class="booking-info mb-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Check-in:</span>
+                                        <span class="fw-bold"><?= date('M j, Y', strtotime($booking_data['check_in'])) ?></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Check-out:</span>
+                                        <span class="fw-bold"><?= date('M j, Y', strtotime($booking_data['check_out'])) ?></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Guests:</span>
+                                        <span class="fw-bold"><?= $booking_data['adults'] ?> Adults, <?= $booking_data['children'] ?> Children</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Nights:</span>
+                                        <span class="fw-bold"><?= $nights ?></span>
+                                    </div>
                                 </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted">Check-out:</span>
-                                    <span class="fw-bold"><?= date('M j, Y', strtotime($booking_data['check_out'])) ?></span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted">Guests:</span>
-                                    <span class="fw-bold"><?= $booking_data['adults'] ?> Adults, <?= $booking_data['children'] ?> Children</span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted">Nights:</span>
-                                    <span class="fw-bold"><?= $nights ?></span>
-                                </div>
-                            </div>
 
-                            <hr>
-
-                            <div class="price-breakdown mb-3">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Room Rate (<?= $nights ?> nights):</span>
-                                    <span>₱<?= number_format($booking_data['room_price'] * $nights, 0) ?></span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Taxes & Fees:</span>
-                                    <span>₱0</span>
-                                </div>
                                 <hr>
-                                <div class="d-flex justify-content-between fw-bold">
-                                    <span>Total Amount:</span>
-                                    <span>₱<?= number_format($booking_data['total_amount'], 0) ?></span>
-                                </div>
-                            </div>
 
-                            <!-- Guest Information -->
-                            <div class="guest-info mb-3">
-                                <h6 class="fw-bold mb-2">Guest Information</h6>
-                                <div class="small text-muted">
-                                    <div class="mb-1"><strong>Name:</strong> <?= $booking_data['guest_name'] ?></div>
-                                    <div class="mb-1"><strong>Email:</strong> <?= $booking_data['guest_email'] ?></div>
-                                    <div class="mb-1"><strong>Phone:</strong> <?= $booking_data['guest_phone'] ?></div>
-                                    <div class="mb-1"><strong>Booking ID:</strong> <?= $booking_data['booking_id'] ?></div>
+                                <div class="price-breakdown mb-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Room Rate (<?= $nights ?> nights):</span>
+                                        <span>₱<?= number_format($booking_data['room_price'] * $nights, 0) ?></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Taxes & Fees:</span>
+                                        <span>₱0</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between fw-bold">
+                                        <span>Total Amount:</span>
+                                        <span>₱<?= number_format($booking_data['total_amount'], 0) ?></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Payment Status -->
-                            <div class="payment-status mb-3">
-                                <small class="text-muted">Payment Status: <span class="text-warning fw-bold"><?= ucfirst($booking_data['payment_status']) ?></span></small>
+                                <!-- Guest Information -->
+                                <div class="guest-info mb-3">
+                                    <h6 class="fw-bold mb-2">Guest Information</h6>
+                                    <div class="small text-muted">
+                                        <div class="mb-1"><strong>Name:</strong> <?= $booking_data['guest_name'] ?></div>
+                                        <div class="mb-1"><strong>Email:</strong> <?= $booking_data['guest_email'] ?></div>
+                                        <div class="mb-1"><strong>Phone:</strong> <?= $booking_data['guest_phone'] ?></div>
+                                        <div class="mb-1"><strong>Booking ID:</strong> <span id="booking-id-text"><?= $booking_data['booking_id'] ?></span></div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Status -->
+                                <div class="payment-status mb-3">
+                                    <small class="text-muted">Payment Status: <span class="text-warning fw-bold"><?= ucfirst($booking_data['payment_status']) ?></span></small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1007,15 +1033,387 @@ $nights = $checkin->diff($checkout)->days;
         });
     </script>
 
-    REGISTER
-    </button>
-    </div>
-    </div>
-    </form>
-    </div>
-    </div>
+    </body>
+
+    </html>
+<?php /* */ exit; ?>
+        .transparent-navbar {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6)) !important;
+            backdrop-filter: blur(10px);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .transparent-navbar.scrolled {
+            /* background: rgba(255, 255, 255, 0.95) !important; */
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .transparent-navbar.scrolled .nav-link {
+            color: white !important;
+        }
+
+        .transparent-navbar.scrolled .brand-Cinzel {
+            color: white !important;
+        }
+
+        /* Hero Section - Matching room_details.php */
+        .booking-hero {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9)),
+                url('images/rooms/room1.jpg') center/cover;
+            min-height: 40vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            margin-top: 76px;
+        }
+
+        .booking-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+        }
+
+        .booking-hero .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .confirmation-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: none;
+            overflow: hidden;
+        }
+
+        .booking-summary-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 100px;
+        }
+
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            font-weight: 600;
+        }
+
+        .booking-details {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-row {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 15px 0;
+            transition: all 0.3s ease;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-row:hover {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            padding: 15px 10px;
+        }
+
+        .pay-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+            border-radius: 25px;
+            padding: 15px 40px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .pay-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+            color: white;
+        }
+
+        .payment-section {
+            margin-top: 2rem;
+        }
+
+        /* Room Gallery - Matching room_details.php */
+        .room-gallery {
+            margin-bottom: 30px;
+        }
+
+        .room-gallery img {
+            border-radius: 15px;
+            height: 300px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .room-gallery img:hover {
+            transform: scale(1.02);
+        }
+
+        /* Room Info Card - Matching room_details.php */
+        .room-info-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .price-badge {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: inline-block;
+        }
+
+        .amenity-item {
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .amenity-item:hover {
+            transform: translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .booking-hero {
+                min-height: 30vh;
+                padding: 60px 0 20px;
+            }
+        }
+
+        .payment-summary {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+        }
+
+        #pay-now-btn {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        #pay-now-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+        }
+
+        .success-icon {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+    <!-- Transparent Navbar -->
+    <?php require('inc/header.php'); ?>
+
+    <!-- Hero Section with Booking Title -->
+    <div class="booking-hero">
+        <div class="container text-center text-white">
+            <h1 class="display-4 fw-bold mb-3">
+                Booking Confirmation
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb justify-content-center">
+                    <li class="breadcrumb-item">
+                        <a href="index.php" class="text-white-50 text-decoration-none">HOME</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="rooms.php" class="text-white-50 text-decoration-none">ROOMS</a>
+                    </li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">
+                        BOOKING CONFIRMATION
+                    </li>
+                </ol>
+            </nav>
+        </div>
     </div>
 
-</body>
+    <?php if (!empty($availability_error)): ?>
+        <div class="container mt-4">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <?= htmlspecialchars($availability_error) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    <?php endif; ?>
 
-</html>
+    <!-- Main Content -->
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Success Message (Final Step Only) -->
+                <div id="final-confirmation" class="text-center mb-4" style="display:none;">
+                    <div class="success-icon mb-3">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                    </div>
+                    <h2 class="fw-bold text-success">Booking Confirmed!</h2>
+                    <p class="text-muted fs-5">Your reservation has been successfully confirmed. Please save this confirmation for your records.</p>
+                </div>
+
+                <!-- Step 1: Review Section -->
+                <div id="step-review">
+                    <!-- Room Gallery -->
+                    <div class="room-gallery mb-4">
+                        <div id="roomCarousel" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                <?php
+                                // Fallback room images array
+                                $fallback_images = [
+                                    "IMG_12341.jpg",
+                                    "IMG_12633.jpg",
+                                    "IMG_19430.jpg",
+                                    "IMG_25323.jpg",
+                                    "IMG_29030.jpg",
+                                    "IMG_41616.jpg",
+                                    "IMG_49697.jpg",
+                                    "IMG_57663.jpg",
+                                    "IMG_63903.jpg",
+                                    "IMG_67520.jpg",
+                                    "IMG_72980.jpg",
+                                    "IMG_76227.jpg",
+                                    "IMG_76731.jpg",
+                                    "IMG_99925.jpg",
+                                    "room1.jpg"
+                                ];
+
+                                if ($room_id) {
+                                    $img_q = mysqli_query($con, "SELECT * FROM `room_images` WHERE `room_id`='{$room_data['id']}'");
+
+                                    if (mysqli_num_rows($img_q) > 0) {
+                                        // Display images from database
+                                        $active_class = 'active';
+                                        while ($img_res = mysqli_fetch_assoc($img_q)) {
+                                            echo "
+                                        <div class='carousel-item $active_class'>
+                                            <img src='" . ROOMS_IMG_PATH . $img_res['image'] . "' class='d-block w-100' alt='Room Image' style='height: 300px; object-fit: cover;'>
+                                        </div>";
+                                            $active_class = '';
+                                        }
+                                    } else {
+                                        // Display fallback images when no database images exist
+                                        $active_class = 'active';
+                                        // Use room ID to select consistent images for each room
+                                        $start_index = ($room_data['id'] - 1) % count($fallback_images);
+
+                                        // Show 5 different images for variety
+                                        for ($i = 0; $i < 5; $i++) {
+                                            $image_index = ($start_index + $i) % count($fallback_images);
+                                            $room_img = ROOMS_IMG_PATH . $fallback_images[$image_index];
+                                            echo "
+                                        <div class='carousel-item $active_class'>
+                                            <img src='$room_img' class='d-block w-100' alt='Room Image' style='height: 300px; object-fit: cover;'>
+                                        </div>";
+                                            $active_class = '';
+                                        }
+                                    }
+                                } else {
+                                    // Default image when no room_id
+                                    echo "
+                                    <div class='carousel-item active'>
+                                        <img src='" . ROOMS_IMG_PATH . "room1.jpg' class='d-block w-100' alt='Room Image' style='height: 300px; object-fit: cover;'>
+                                    </div>";
+                                }
+                                ?>
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold mb-0">Booking Details</h4>
+                        <span class="badge bg-success fs-6">Review</span>
+                    </div>
+
+                    <div class="row">
+                        <!-- Left Column - Room Info -->
+                        <div class="col-md-8">
+                            <div class="room-info-card p-4 mb-4">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h3 class="fw-bold mb-2"><?= $booking_data['room_name'] ?></h3>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="rating me-3">
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                <i class="bi bi-star text-warning"></i>
+                                                <span class="ms-2 text-muted">(4.2)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="price-badge">
+                                        ₱<?= number_format($booking_data['room_price'], 0) ?>
+                                        <small class="text-muted">/night</small>
+                                    </div>
+                                </div>
+
+                                <!-- Room Features -->
+                                <div class="room-

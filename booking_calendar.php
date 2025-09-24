@@ -23,7 +23,8 @@ if (session_status() == PHP_SESSION_NONE) {
             margin: 0;
             padding: 0;
             background-color: #f7f7f7;
-            padding-top: 90px; /* Offset for fixed navbar so calendar isn't covered */
+            padding-top: 90px;
+            /* Offset for fixed navbar so calendar isn't covered */
         }
 
         .booking-container {
@@ -38,28 +39,153 @@ if (session_status() == PHP_SESSION_NONE) {
         }
 
         /* Steps: horizontal with connectors (blue theme to match Select Rooms & Rates) */
-        .booking-steps{background:#fff;border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,0.08);max-width:1200px;margin:1.5rem auto;padding:1.25rem}
-        .booking-steps .steps-container{display:flex;gap:.75rem;align-items:center;overflow-x:auto;padding-bottom:.25rem}
-        .booking-steps .step{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;padding:.5rem;border-radius:12px;min-width:140px;text-align:center}
-        .booking-steps .step-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;background:#e9ecef;color:#6c757d;transition:all .3s ease}
-        .booking-steps .step-title{font-size:13px;font-weight:600;text-align:center;line-height:1.2;color:#6c757d}
-        .booking-steps .step.active .step-icon{background:#0d6efd;color:#fff}
-        .booking-steps .step.active .step-title{color:#0d6efd}
-        .booking-steps .connector{display:flex;align-items:center;gap:.4rem;min-width:80px;flex:1}
-        .booking-steps .connector .dot{width:10px;height:10px;border-radius:50%;background:#e0e6ef;flex-shrink:0}
-        .booking-steps .connector .line{height:3px;background:#e0e6ef;border-radius:3px;flex:1}
+        .booking-steps {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            max-width: 1200px;
+            margin: 1.5rem auto;
+            padding: 1.25rem
+        }
+
+        .booking-steps .steps-container {
+            display: flex;
+            gap: .75rem;
+            align-items: center;
+            overflow-x: auto;
+            padding-bottom: .25rem
+        }
+
+        .booking-steps .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            padding: .5rem;
+            border-radius: 12px;
+            min-width: 140px;
+            text-align: center
+        }
+
+        .booking-steps .step-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            background: #e9ecef;
+            color: #6c757d;
+            transition: all .3s ease
+        }
+
+        .booking-steps .step-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.2;
+            color: #6c757d
+        }
+
+        .booking-steps .step.active .step-icon {
+            background: #0d6efd;
+            color: #fff
+        }
+
+        .booking-steps .step.active .step-title {
+            color: #0d6efd
+        }
+
+        .booking-steps .connector {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            min-width: 80px;
+            flex: 1
+        }
+
+        .booking-steps .connector .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e0e6ef;
+            flex-shrink: 0
+        }
+
+        .booking-steps .connector .line {
+            height: 3px;
+            background: #e0e6ef;
+            border-radius: 3px;
+            flex: 1
+        }
+
         /* If you want to show progress connector after current step, add .active to .connector */
-        .booking-steps .connector.active .dot, .booking-steps .connector.active .line{background:#0d6efd}
+        .booking-steps .connector.active .dot,
+        .booking-steps .connector.active .line {
+            background: #0d6efd
+        }
 
         /* NEW: page grid & right summary (align with Select Rooms & Rates) */
-        .calendar-page-grid{display:grid;grid-template-columns:1fr;gap:1.5rem}
-        .calendar-main{min-width:0}
-        .booking-summary{background:linear-gradient(135deg,#0d6efd,#2563eb);color:#fff;border-radius:15px;padding:16px 18px;box-shadow:0 10px 25px rgba(0,0,0,.08)}
-        .booking-summary h6{font-weight:700;margin-bottom:12px}
-        .summary-line{background:rgba(255,255,255,.15);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:10px;display:flex;justify-content:space-between}
-        .summary-edit{display:inline-block;margin-top:8px;color:#fff;text-decoration:underline;font-size:12px}
-        @media(min-width:768px){ .calendar-page-grid{grid-template-columns:2.5fr 1fr} .booking-summary{ position:sticky; top:90px; } }
-        @media (max-width:991.98px){ .booking-summary{ margin-top:16px } }
+        .calendar-page-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem
+        }
+
+        .calendar-main {
+            min-width: 0
+        }
+
+        .booking-summary {
+            background: linear-gradient(135deg, #0d6efd, #2563eb);
+            color: #fff;
+            border-radius: 15px;
+            padding: 16px 18px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .08)
+        }
+
+        .booking-summary h6 {
+            font-weight: 700;
+            margin-bottom: 12px
+        }
+
+        .summary-line {
+            background: rgba(255, 255, 255, .15);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 13px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between
+        }
+
+        .summary-edit {
+            display: inline-block;
+            margin-top: 8px;
+            color: #fff;
+            text-decoration: underline;
+            font-size: 12px
+        }
+
+        @media(min-width:768px) {
+            .calendar-page-grid {
+                grid-template-columns: 2.5fr 1fr
+            }
+
+            .booking-summary {
+                position: sticky;
+                top: 90px;
+            }
+        }
+
+        @media (max-width:991.98px) {
+            .booking-summary {
+                margin-top: 16px
+            }
+        }
 
         .booking-form {
             background: white;
@@ -150,7 +276,8 @@ if (session_status() == PHP_SESSION_NONE) {
             gap: 0;
         }
 
-        .day-header, .calendar-day {
+        .day-header,
+        .calendar-day {
             padding: 0.75rem;
             text-align: center;
             border: 1px solid #e9ecef;
@@ -171,14 +298,17 @@ if (session_status() == PHP_SESSION_NONE) {
         }
 
         .calendar-day.invalid {
-            background: #fde7ea; /* softer red */
+            background: #fde7ea;
+            /* softer red */
             color: #b02a37;
             cursor: not-allowed;
             pointer-events: none;
         }
 
-        .calendar-day.checkin, .calendar-day.checkout {
-            background: #0d6efd; /* solid blue */
+        .calendar-day.checkin,
+        .calendar-day.checkout {
+            background: #0d6efd;
+            /* solid blue */
             color: #ffffff;
             font-weight: 700;
         }
@@ -190,7 +320,8 @@ if (session_status() == PHP_SESSION_NONE) {
         }
 
         /* Added: booked / not available indicator */
-        .calendar-day.booked, .calendar-day.not-available {
+        .calendar-day.booked,
+        .calendar-day.not-available {
             background: #fde7ea;
             color: #b02a37;
             cursor: not-allowed;
@@ -212,10 +343,26 @@ if (session_status() == PHP_SESSION_NONE) {
             display: inline-block;
         }
 
-        .badge-available { background: #ffffff; border:1px solid #e9ecef; }
-        .badge-checkin { background: #0d6efd; }
-        .badge-checkout { background: #0d6efd; }
-        .badge-invalid { background: #fde7ea; }
+        .badge-available {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+        }
+
+        .badge-checkin {
+            background: #0d6efd;
+        }
+
+        .badge-checkout {
+            background: #0d6efd;
+        }
+
+        .badge-invalid {
+            background: #fde7ea;
+        }
+
+        .badge-booked {
+            background: #dc3545;
+        }
 
         .continue-btn {
             background: #ff6f00;
@@ -248,8 +395,13 @@ if (session_status() == PHP_SESSION_NONE) {
             }
 
             /* keep steps horizontal scroll on mobile */
-            .booking-steps .steps-container { flex-wrap: nowrap; }
-            .booking-steps .step { min-width: 140px; }
+            .booking-steps .steps-container {
+                flex-wrap: nowrap;
+            }
+
+            .booking-steps .step {
+                min-width: 140px;
+            }
 
             .legend-items {
                 grid-template-columns: 1fr;
@@ -450,6 +602,7 @@ if (session_status() == PHP_SESSION_NONE) {
                             <div class="legend-item"><span class="legend-badge badge-available"></span> Available</div>
                             <div class="legend-item"><span class="legend-badge badge-checkin"></span> Check-in</div>
                             <div class="legend-item"><span class="legend-badge badge-checkout"></span> Check-out</div>
+                            <div class="legend-item"><span class="legend-badge badge-booked"></span> Booked</div>
                             <div class="legend-item"><span class="legend-badge badge-invalid"></span> Not available</div>
                         </div>
                     </div>
@@ -459,8 +612,8 @@ if (session_status() == PHP_SESSION_NONE) {
             <!-- Right-side Booking Summary (sticky on md+) -->
             <aside class="booking-summary">
                 <h6>Booking Summary</h6>
-                <div class="summary-line"><span>Date</span><span id="summaryDates"><?php echo $checkin?date('M d, Y', strtotime($checkin)):'—'; ?> - <?php echo $checkout?date('M d, Y', strtotime($checkout)):'—'; ?></span></div>
-                <div class="summary-line"><span>Special Code</span><span id="summaryPromo"><?php echo $promo!==''?$promo:'(No input)'; ?></span></div>
+                <div class="summary-line"><span>Date</span><span id="summaryDates"><?php echo $checkin ? date('M d, Y', strtotime($checkin)) : '—'; ?> - <?php echo $checkout ? date('M d, Y', strtotime($checkout)) : '—'; ?></span></div>
+                <div class="summary-line"><span>Special Code</span><span id="summaryPromo"><?php echo $promo !== '' ? $promo : '(No input)'; ?></span></div>
                 <a class="summary-edit" href="#bookingForm">Edit</a>
             </aside>
         </div>
@@ -469,8 +622,8 @@ if (session_status() == PHP_SESSION_NONE) {
     <script>
         let checkinDate = null;
         let checkoutDate = null;
-        let currentMonthIndex = 8; // September (0-based)
-        let currentYear = 2025;
+        let currentMonthIndex = (new Date()).getMonth(); // initialize to current month
+        let currentYear = (new Date()).getFullYear(); // initialize to current year
         let bookedDates = []; // Store booked dates from server
         let selectedRoomId = 1; // Default room ID, can be changed based on selection
 
@@ -490,7 +643,7 @@ if (session_status() == PHP_SESSION_NONE) {
             }
 
             const today = new Date();
-            today.setHours(0,0,0,0);
+            today.setHours(0, 0, 0, 0);
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -514,11 +667,17 @@ if (session_status() == PHP_SESSION_NONE) {
 
             checkinDate = new Date(checkinStr);
             checkoutDate = new Date(checkoutStr);
+            // Align visible calendar to check-in month
+            if (!isNaN(checkinDate)) {
+                currentMonthIndex = checkinDate.getMonth();
+                currentYear = checkinDate.getFullYear();
+            }
         }
 
         // Initialize calendar
         document.addEventListener('DOMContentLoaded', function() {
             initializeFromParams();
+            renderCalendars();
             setupDateInputs();
             setupCalendarClicks();
             loadBookedDates(); // Load booked dates from server
@@ -602,8 +761,14 @@ if (session_status() == PHP_SESSION_NONE) {
                             checkinDate = dateObj;
                             if (checkinInput) checkinInput.value = dateStr;
                         } else {
+                            // Tentatively set checkout, then validate against booked dates
                             checkoutDate = dateObj;
                             if (checkoutInput) checkoutInput.value = dateStr;
+                            if (!isRangeAvailable(checkinDate, checkoutDate)) {
+                                alert('Selected dates overlap with booked/blocked dates. Please choose different dates.');
+                                checkoutDate = null;
+                                if (checkoutInput) checkoutInput.value = '';
+                            }
                         }
                     }
 
@@ -625,7 +790,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
             // Mark past dates (tapos na)
             const today = new Date();
-            today.setHours(0,0,0,0);
+            today.setHours(0, 0, 0, 0);
             const todayStr = formatDateForInput(today);
             document.querySelectorAll('.calendar-day').forEach(day => {
                 if (day.dataset.date && day.dataset.date < todayStr) {
@@ -688,8 +853,13 @@ if (session_status() == PHP_SESSION_NONE) {
         // NEW: Summary formatter and updater
         function formatDisplayDate(str) {
             const d = new Date(str);
-            return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+            return d.toLocaleDateString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric'
+            });
         }
+
         function updateSummaryFromInputs() {
             const ci = document.getElementById('checkin')?.value || '';
             const co = document.getElementById('checkout')?.value || '';
@@ -710,14 +880,115 @@ if (session_status() == PHP_SESSION_NONE) {
             return date.toISOString().split('T')[0];
         }
 
+        // Helpers to render months dynamically
+        function getDaysInMonth(monthIndex, year) {
+            return new Date(year, monthIndex + 1, 0).getDate();
+        }
+
+        function pad(n) {
+            return n < 10 ? '0' + n : '' + n;
+        }
+
+        function monthLabel(m, y) {
+            return months[m] + ' ' + y;
+        }
+
+        function buildMonthHTML(monthIndex, year, headerOptions) {
+            const firstDay = new Date(year, monthIndex, 1).getDay(); // 0=Sun
+            const daysInMonth = getDaysInMonth(monthIndex, year);
+            let html = '';
+            html += '<div class="calendar">';
+            html += '  <div class="calendar-header">';
+            html += '    <div class="calendar-nav">';
+            if (headerOptions.showPrev) {
+                html += '      <button type="button" class="nav-btn" onclick="previousMonth()">&lt;</button>';
+            }
+            const labelId = headerOptions.labelId ? ' id="' + headerOptions.labelId + '"' : '';
+            html += '      <span' + labelId + '>' + monthLabel(monthIndex, year) + '</span>';
+            if (headerOptions.showNext) {
+                html += '      <button type="button" class="nav-btn" onclick="nextMonth()">&gt;</button>';
+            }
+            html += '    </div>';
+            html += '  </div>';
+            html += '  <div class="calendar-grid">';
+            // Day headers
+            ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].forEach(d => {
+                html += '    <div class="day-header">' + d + '</div>';
+            });
+            // Leading blanks
+            for (let i = 0; i < firstDay; i++) {
+                html += '    <div class="calendar-day disabled"></div>';
+            }
+            // Days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = year + '-' + pad(monthIndex + 1) + '-' + pad(day);
+                html += '    <div class="calendar-day available" data-date="' + dateStr + '">' + day + '</div>';
+            }
+            // Trailing blanks to complete week rows
+            const totalCells = firstDay + daysInMonth;
+            const trailing = (7 - (totalCells % 7)) % 7;
+            for (let i = 0; i < trailing; i++) {
+                html += '    <div class="calendar-day disabled"></div>';
+            }
+            html += '  </div>';
+            html += '  <div class="calendar-footer">Check-in: 03:00 PM | Check-out: 12:00 PM</div>';
+            html += '</div>';
+            return html;
+        }
+
+        function renderCalendars() {
+            const container = document.querySelector('.calendar-container');
+            if (!container) return;
+            // First (current) month
+            const curMonth = currentMonthIndex;
+            const curYear = currentYear;
+            // Second (next) month
+            const nextMonthIndex = (curMonth + 1) % 12;
+            const nextMonthYear = curMonth === 11 ? curYear + 1 : curYear;
+
+            const firstCal = buildMonthHTML(curMonth, curYear, {
+                showPrev: true,
+                showNext: true,
+                labelId: 'currentMonth'
+            });
+            const secondCal = buildMonthHTML(nextMonthIndex, nextMonthYear, {
+                showPrev: false,
+                showNext: true,
+                labelId: ''
+            });
+            container.innerHTML = firstCal + secondCal;
+        }
+
         function previousMonth() {
-            // Implementation for previous month navigation
-            console.log('Previous month clicked');
+            // Go to previous month
+            if (currentMonthIndex === 0) {
+                currentMonthIndex = 11;
+                currentYear -= 1;
+            } else {
+                currentMonthIndex -= 1;
+            }
+            renderCalendars();
+            setupCalendarClicks();
+            // Refresh availability in case it changed
+            loadBookedDates();
+            updateCalendarDisplay();
+            updateNights();
         }
 
         function nextMonth() {
-            // Implementation for next month navigation
-            console.log('Next month clicked');
+            // Go to next month
+            if (currentMonthIndex === 11) {
+                currentMonthIndex = 0;
+                currentYear += 1;
+            } else {
+                currentMonthIndex += 1;
+            }
+            renderCalendars();
+            setupCalendarClicks();
+            // Refresh availability in case it changed
+            loadBookedDates();
+            updateCalendarDisplay();
+            updateNights();
         }
 
         function continueBooking() {
@@ -757,8 +1028,8 @@ if (session_status() == PHP_SESSION_NONE) {
                         const children = params.get('children') || '';
 
                         let target = 'select_rooms_rates.php' +
-                                     '?checkin=' + encodeURIComponent(checkinStr) +
-                                     '&checkout=' + encodeURIComponent(checkoutStr);
+                            '?checkin=' + encodeURIComponent(checkinStr) +
+                            '&checkout=' + encodeURIComponent(checkoutStr);
                         if (adults) target += '&adults=' + encodeURIComponent(adults);
                         if (children) target += '&children=' + encodeURIComponent(children);
                         // Read promo from input instead of URL params

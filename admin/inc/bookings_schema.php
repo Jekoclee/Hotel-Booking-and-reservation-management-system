@@ -39,5 +39,12 @@ if (!function_exists('ensureBookingsSchema')) {
         if (!$hasCol('refund_processed_at')) {
             @mysqli_query($con, "ALTER TABLE bookings ADD COLUMN refund_processed_at DATETIME NULL AFTER refund_requested_at");
         }
+
+        // Idempotency token for client-side booking creation
+        if (!$hasCol('booking_token')) {
+            @mysqli_query($con, "ALTER TABLE bookings ADD COLUMN booking_token VARCHAR(64) NULL AFTER booking_id");
+            // Add unique index to enforce idempotency (safe to ignore error if already exists)
+            @mysqli_query($con, "ALTER TABLE bookings ADD UNIQUE KEY booking_token_unique (booking_token)");
+        }
     }
 }

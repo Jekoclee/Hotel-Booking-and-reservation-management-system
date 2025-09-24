@@ -3,6 +3,9 @@ require('../admin/inc/db_config.php');
 require('../admin/inc/essentials.php');
 
 header('Content-Type: application/json');
+// Prevent caching to ensure calendar reflects latest availability after admin actions
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
 
 // Allow both GET and POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -25,17 +28,19 @@ if (!$room_id) {
 }
 
 try {
-    // Get booked dates from bookings table
+    // Get booked dates from bookings table (exclude deleted bookings)
     $query = "SELECT DISTINCT DATE(check_in) as booked_date
               FROM bookings 
               WHERE room_id = ? 
               AND booking_status IN ('confirmed', 'pending')
+              AND removed = 0
               AND check_in >= CURDATE()
               UNION
               SELECT DISTINCT check_out as booked_date
               FROM bookings 
               WHERE room_id = ? 
               AND booking_status IN ('confirmed', 'pending')
+              AND removed = 0
               AND check_out >= CURDATE()
               UNION
               SELECT DISTINCT date as booked_date
@@ -55,11 +60,12 @@ try {
         $booked_dates[] = $row['booked_date'];
     }
 
-    // Also get date ranges that are booked (between check_in and check_out)
+    // Also get date ranges that are booked (between check_in and check_out), exclude deleted bookings
     $range_query = "SELECT check_in, check_out
                     FROM bookings 
                     WHERE room_id = ? 
                     AND booking_status IN ('confirmed', 'pending')
+                    AND removed = 0
                     AND check_out >= CURDATE()";
 
     $range_stmt = $con->prepare($range_query);

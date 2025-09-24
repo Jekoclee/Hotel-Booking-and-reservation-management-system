@@ -16,7 +16,7 @@ if (session_status() == PHP_SESSION_NONE) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leisure Coast Resort - ROOM-DETAILS</title>
     <?php require('inc/links.php'); ?>
-    
+
 
     <style>
         body {
@@ -567,24 +567,9 @@ if (session_status() == PHP_SESSION_NONE) {
                         </div>
 
                         <!-- Guest Information -->
-                        <div class="mb-3">
-                            <label for="guest_name" class="form-label">Full Name</label>
-                            <input type="text" class="form-control" id="guest_name" name="guest_name" required
-                                value="<?= isset($_SESSION['uName']) ? $_SESSION['uName'] : '' ?>">
-                        </div>
-                        <div class="mb-3">
-                            <label for="guest_email" class="form-label">Email Address</label>
-                            <input type="email" class="form-control" id="guest_email" name="guest_email" required
-                                value="<?= isset($_SESSION['uEmail']) ? $_SESSION['uEmail'] : '' ?>">
-                        </div>
-                        <div class="mb-3">
-                            <label for="guest_phone" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="guest_phone" name="guest_phone" required>
-                        </div>
-                        <div class="mb-4">
-                            <label for="special_requests" class="form-label">Special Requests (Optional)</label>
-                            <textarea class="form-control" id="special_requests" name="special_requests" rows="3"
-                                placeholder="Any special requirements or requests..."></textarea>
+                        <div class="alert alert-secondary mb-4">
+                            <i class="bi bi-person-lines-fill me-2"></i>
+                            Guest details and payment method will be collected on the next step.
                         </div>
 
                         <!-- Total Amount Display -->
@@ -607,15 +592,15 @@ if (session_status() == PHP_SESSION_NONE) {
                         <!-- Login check with proper alert -->
                         <?php if (isset($_SESSION['login']) && $_SESSION['login'] == true): ?>
                             <button type="button" class="btn btn-success w-100 py-3" id="book-now-btn">
-                                <i class="bi bi-credit-card me-2"></i>Book Now
+                                <i class="bi bi-arrow-right-circle me-2"></i>Continue to Guest Info & Payment
                             </button>
                         <?php else: ?>
                             <button type="button" class="btn btn-warning w-100 py-3" id="login-required-btn" onclick="showLoginAlert()">
-                                <i class="bi bi-exclamation-triangle me-2"></i>Book Now (Login Required)
+                                <i class="bi bi-exclamation-triangle me-2"></i>Continue (Login Required)
                             </button>
                             <div class="alert alert-info text-center mt-2">
                                 <i class="bi bi-info-circle me-2"></i>
-                                Please <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" class="text-decoration-none">login</a> to make a booking
+                                Please <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" class="text-decoration-none">login</a> to continue
                             </div>
                         <?php endif; ?>
 
@@ -670,37 +655,37 @@ if (session_status() == PHP_SESSION_NONE) {
                     </div>
 
                     <?php if (isset($_SESSION['login']) && $_SESSION['login'] == true): ?>
-                    <div class="review-form">
-                        <h5 class="fw-bold mb-3">Write a Review</h5>
-                        <form id="review-form">
-                            <input type="hidden" name="room_id" id="review-room-id" value="<?= $room_data['id'] ?>">
-                            <div class="mb-3">
-                                <label class="form-label">Rating</label>
-                                <div class="d-flex align-items-center gap-2">
-                                    <select class="form-select w-auto" name="rating" id="review-rating" required>
-                                        <option value="">Select</option>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
-                                        <option value="5">5</option>
-                                    </select>
-                                    <span class="text-muted">Stars</span>
+                        <div class="review-form">
+                            <h5 class="fw-bold mb-3">Write a Review</h5>
+                            <form id="review-form">
+                                <input type="hidden" name="room_id" id="review-room-id" value="<?= $room_data['id'] ?>">
+                                <div class="mb-3">
+                                    <label class="form-label">Rating</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <select class="form-select w-auto" name="rating" id="review-rating" required>
+                                            <option value="">Select</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                        </select>
+                                        <span class="text-muted">Stars</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="review-comment" class="form-label">Your Review</label>
-                                <textarea class="form-control" id="review-comment" name="comment" rows="3" placeholder="Share your experience..." required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Submit Review</button>
-                            <div class="form-text">Your review will be visible after admin approval.</div>
-                        </form>
-                    </div>
+                                <div class="mb-3">
+                                    <label for="review-comment" class="form-label">Your Review</label>
+                                    <textarea class="form-control" id="review-comment" name="comment" rows="3" placeholder="Share your experience..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit Review</button>
+                                <div class="form-text">Your review will be visible after admin approval.</div>
+                            </form>
+                        </div>
                     <?php else: ?>
-                    <div class="alert alert-info mb-0">
-                        <i class="bi bi-info-circle me-2"></i>
-                        Please <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">login</a> to write a review.
-                    </div>
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Please <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">login</a> to write a review.
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -740,7 +725,7 @@ if (session_status() == PHP_SESSION_NONE) {
     });
 
     // Availability + totals logic for booking form
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('booking-form');
         if (!form) return;
 
@@ -785,13 +770,18 @@ if (session_status() == PHP_SESSION_NONE) {
         const scrollBtn = document.getElementById('book-now-scroll');
         if (scrollBtn && form) {
             scrollBtn.addEventListener('click', function() {
-                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                form.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
             });
         }
 
         function formatCurrency(num) {
             try {
-                return '₱' + Number(num).toLocaleString('en-PH', { maximumFractionDigits: 0 });
+                return '₱' + Number(num).toLocaleString('en-PH', {
+                    maximumFractionDigits: 0
+                });
             } catch (e) {
                 return '₱' + num;
             }
@@ -859,33 +849,43 @@ if (session_status() == PHP_SESSION_NONE) {
             try {
                 const res = await fetch('ajax/validate_booking.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         room_id: parseInt(roomId),
                         checkin_date: checkin,
                         checkout_date: checkout
                     })
                 });
-                const data = await res.json();
+                const contentType = res.headers.get('content-type') || '';
+                const text = await res.text();
+                console.debug('[validate_booking] status=', res.status, 'content-type=', contentType, 'body=', text.slice(0, 500));
+                if (!contentType.includes('application/json')) {
+                    throw new Error(`Unexpected response (status ${res.status}): ${text.slice(0, 200)}`);
+                }
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('Failed to parse server response as JSON: ' + text.slice(0, 300));
+                }
 
                 if (data && data.success) {
-                    showStatus('success', `Dates are available for ${data.nights} night(s). Redirecting to confirmation...`);
+                    showStatus('success', `Dates are available for ${data.nights} night(s). Redirecting to guest information...`);
 
                     const params = new URLSearchParams({
                         room_id: roomId,
                         check_in: checkin,
                         check_out: checkout,
                         adults: adultsEl?.value || '1',
-                        children: childrenEl?.value || '0',
-                        guest_name: nameEl?.value || '',
-                        guest_email: emailEl?.value || '',
-                        guest_phone: phoneEl?.value || '',
-                        special_requests: reqEl?.value || ''
+                        children: childrenEl?.value || '0'
                     });
 
                     // Slight delay to let the user see the success message
                     setTimeout(() => {
-                        window.location.href = 'booking_confirmation.php?' + params.toString();
+                        window.location.href = 'guest_information.php?' + params.toString();
                     }, 600);
                 } else {
                     let extra = '';
@@ -901,7 +901,7 @@ if (session_status() == PHP_SESSION_NONE) {
                 }
             } catch (err) {
                 console.error(err);
-                showStatus('danger', 'An error occurred while checking availability. Please try again.');
+                showStatus('danger', 'An error occurred while checking availability. ' + (err?.message || 'Please try again.'));
             }
         }
 
@@ -914,31 +914,37 @@ if (session_status() == PHP_SESSION_NONE) {
 
 <!-- Reviews logic -->
 <script>
-(function() {
-  const roomId = document.getElementById('review-room-id') ? document.getElementById('review-room-id').value : '<?= $room_data['id'] ?>';
-  const listEl = document.getElementById('reviews-list');
-  const avgEl = document.getElementById('avg-rating-display');
+    (function() {
+        const roomId = document.getElementById('review-room-id') ? document.getElementById('review-room-id').value : '<?= $room_data['id'] ?>';
+        const listEl = document.getElementById('reviews-list');
+        const avgEl = document.getElementById('avg-rating-display');
 
-  function renderReviews(data){
-    if(!data || !data.success){ return; }
-    const {reviews, avg_rating, count} = data;
-    if (typeof avg_rating !== 'undefined'){
-      if (count > 0){
-        avgEl.style.display = '';
-        avgEl.textContent = `${avg_rating} / 5 · ${count} review${count>1?'s':''}`;
-      } else {
-        avgEl.style.display = 'none';
-      }
-    }
-    if(!reviews || reviews.length === 0){
-      listEl.innerHTML = `<div class="text-center text-muted"><i class=\"bi bi-star fs-1 mb-3\"></i><p>No reviews yet. Be the first to review this room.</p></div>`;
-      return;
-    }
-    listEl.innerHTML = reviews.map(r => {
-      const stars = '★★★★★'.slice(0, r.rating) + '☆☆☆☆☆'.slice(0, 5 - r.rating);
-      const user = r.user_name ? r.user_name : 'Guest';
-      const date = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
-      return `
+        function renderReviews(data) {
+            if (!data || !data.success) {
+                return;
+            }
+            const {
+                reviews,
+                avg_rating,
+                count
+            } = data;
+            if (typeof avg_rating !== 'undefined') {
+                if (count > 0) {
+                    avgEl.style.display = '';
+                    avgEl.textContent = `${avg_rating} / 5 · ${count} review${count>1?'s':''}`;
+                } else {
+                    avgEl.style.display = 'none';
+                }
+            }
+            if (!reviews || reviews.length === 0) {
+                listEl.innerHTML = `<div class="text-center text-muted"><i class=\"bi bi-star fs-1 mb-3\"></i><p>No reviews yet. Be the first to review this room.</p></div>`;
+                return;
+            }
+            listEl.innerHTML = reviews.map(r => {
+                const stars = '★★★★★'.slice(0, r.rating) + '☆☆☆☆☆'.slice(0, 5 - r.rating);
+                const user = r.user_name ? r.user_name : 'Guest';
+                const date = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
+                return `
         <div class="border rounded p-3 mb-3">
           <div class="d-flex justify-content-between">
             <strong>${user}</strong>
@@ -947,45 +953,49 @@ if (session_status() == PHP_SESSION_NONE) {
           <div class="text-warning" style="letter-spacing:2px">${stars}</div>
           <p class="mb-0">${r.comment ? r.comment.replace(/</g,'&lt;') : ''}</p>
         </div>`;
-    }).join('');
-  }
+            }).join('');
+        }
 
-  function fetchReviews(){
-    fetch(`ajax/reviews.php?room_id=${encodeURIComponent(roomId)}`)
-      .then(r => r.json())
-      .then(renderReviews)
-      .catch(()=>{});
-  }
+        function fetchReviews() {
+            fetch(`ajax/reviews.php?room_id=${encodeURIComponent(roomId)}`)
+                .then(r => r.json())
+                .then(renderReviews)
+                .catch(() => {});
+        }
 
-  fetchReviews();
+        fetchReviews();
 
-  const form = document.getElementById('review-form');
-  if(form){
-    form.addEventListener('submit', function(e){
-      e.preventDefault();
-      const fd = new FormData(form);
-      fd.append('submit_review', '1');
-      fetch('ajax/reviews.php', { method:'POST', body: fd, credentials: 'same-origin' })
-        .then(r => r.json())
-        .then(data => {
-          if(data && data.success){
-            alert('success', 'Review submitted! Waiting for admin approval.');
-            form.reset();
-            fetchReviews();
-          } else {
-            const raw = (data && data.message) ? data.message : 'Submission failed';
-            let friendly = raw;
-            if (raw === 'not_logged_in') friendly = 'Please log in to submit a review.';
-            if (raw === 'invalid_room') friendly = 'Invalid room. Please refresh the page and try again.';
-            if (raw === 'invalid_rating') friendly = 'Please select a rating between 1 and 5.';
-            if (raw === 'empty_comment') friendly = 'Please enter your review comment.';
-            alert('danger', friendly);
-          }
-        })
-        .catch(() => alert('danger', 'Network error'));
-    });
-  }
-})();
+        const form = document.getElementById('review-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const fd = new FormData(form);
+                fd.append('submit_review', '1');
+                fetch('ajax/reviews.php', {
+                        method: 'POST',
+                        body: fd,
+                        credentials: 'same-origin'
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            alert('success', 'Review submitted! Waiting for admin approval.');
+                            form.reset();
+                            fetchReviews();
+                        } else {
+                            const raw = (data && data.message) ? data.message : 'Submission failed';
+                            let friendly = raw;
+                            if (raw === 'not_logged_in') friendly = 'Please log in to submit a review.';
+                            if (raw === 'invalid_room') friendly = 'Invalid room. Please refresh the page and try again.';
+                            if (raw === 'invalid_rating') friendly = 'Please select a rating between 1 and 5.';
+                            if (raw === 'empty_comment') friendly = 'Please enter your review comment.';
+                            alert('danger', friendly);
+                        }
+                    })
+                    .catch(() => alert('danger', 'Network error'));
+            });
+        }
+    })();
 </script>
 
 </body>

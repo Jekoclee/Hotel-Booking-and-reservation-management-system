@@ -202,6 +202,8 @@ async function validateBookingDates(formType) {
 async function createBooking() {
     const form = document.getElementById('createBookingForm');
     const formData = new FormData(form);
+    const createBtn = document.getElementById('createBookingBtn');
+
     const bookingData = {
         action: 'create_booking'
     };
@@ -226,7 +228,19 @@ async function createBooking() {
         return;
     }
 
+    // Generate idempotency token per attempt and pass it to backend
+    // This prevents duplicate booking on repeated clicks/network retries
+    if (!bookingData.booking_token) {
+        const rand = Math.random().toString(36).slice(2);
+        const ts = Date.now().toString(36);
+        bookingData.booking_token = `adm_${ts}_${rand}`;
+    }
+
     try {
+        // Disable button to prevent double submit
+        createBtn.disabled = true;
+        createBtn.textContent = 'Creating...';
+
         const response = await fetch('ajax/booking_management.php', {
             method: 'POST',
             headers: {
@@ -238,7 +252,8 @@ async function createBooking() {
         const data = await response.json();
         
         if (data.success) {
-            showAlert('success', 'Booking created successfully!');
+            const idempNote = data.idempotent ? ' (idempotent)' : '';
+            showAlert('success', 'Booking created successfully!' + idempNote);
             bootstrap.Modal.getInstance(document.getElementById('createBookingModal')).hide();
             form.reset();
             setMinDates();
@@ -249,6 +264,9 @@ async function createBooking() {
     } catch (error) {
         console.error('Error creating booking:', error);
         showAlert('error', 'Error creating booking. Please try again.');
+    } finally {
+        createBtn.disabled = false;
+        createBtn.textContent = 'Create Booking';
     }
 }
 
@@ -287,6 +305,12 @@ async function updateBooking() {
     // Convert FormData to object
     for (let [key, value] of formData.entries()) {
         bookingData[key] = value;
+    }
+
+    // Map 'status' (from form select) to 'booking_status' expected by backend
+    if (bookingData.status !== undefined) {
+        bookingData.booking_status = bookingData.status;
+        delete bookingData.status;
     }
 
     try {

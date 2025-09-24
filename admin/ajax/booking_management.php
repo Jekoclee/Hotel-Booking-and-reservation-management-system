@@ -129,15 +129,27 @@ function createBooking($con, $input)
         return;
     }
 
-    // Check for double booking
-    $conflict_check = checkBookingConflicts($con, $input['room_id'], $checkin, $checkout);
-    if (!$conflict_check['available']) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Selected dates are not available. There are conflicting bookings.',
-            'conflicting_bookings' => $conflict_check['conflicts']
-        ]);
-        return;
+    $booking_token = isset($input['booking_token']) ? trim($input['booking_token']) : null;
+
+    // Idempotency: if a booking already exists with this token, return it instead of creating a new one
+    if ($booking_token) {
+        $token_q = "SELECT id, check_in, check_out, total_amount FROM bookings WHERE booking_token = ? AND removed = 0";
+        $token_stmt = mysqli_prepare($con, $token_q);
+        mysqli_stmt_bind_param($token_stmt, "s", $booking_token);
+        mysqli_stmt_execute($token_stmt);
+        $token_res = mysqli_stmt_get_result($token_stmt);
+        if ($existing = mysqli_fetch_assoc($token_res)) {
+            $existing_nights = (strtotime($existing['check_out']) - strtotime($existing['check_in'])) / (60 * 60 * 24);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Booking already exists for this token',
+                'booking_id' => $existing['id'],
+                'nights' => $existing_nights,
+                'total_amount' => (float)$existing['total_amount'],
+                'idempotent' => true
+            ]);
+            return;
+        }
     }
 
     // Calculate nights and total amount if not provided
@@ -157,32 +169,117 @@ function createBooking($con, $input)
         }
     }
 
-    // Insert booking
-    $insert_query = "INSERT INTO bookings (room_id, guest_name, guest_email, guest_phone, check_in, check_out, 
-                     total_amount, booking_status, special_requests, created_at) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    // Begin transaction to ensure atomicity and avoid race conditions
+    mysqli_begin_transaction($con);
 
-    $stmt = mysqli_prepare($con, $insert_query);
+    // Lock any overlapping bookings for this room to prevent concurrent inserts
+    $lock_q = "SELECT id, check_in, check_out FROM bookings 
+               WHERE room_id = ? 
+               AND booking_status IN ('confirmed', 'pending') 
+               AND removed = 0 
+               AND (check_in < ? AND check_out > ?) 
+               FOR UPDATE";
+
+    $lock_stmt = mysqli_prepare($con, $lock_q);
+    mysqli_stmt_bind_param($lock_stmt, "iss", $input['room_id'], $checkout, $checkin);
+    mysqli_stmt_execute($lock_stmt);
+    $lock_res = mysqli_stmt_get_result($lock_stmt);
+
+    $conflicts = [];
+    if ($lock_res) {
+        while ($row = mysqli_fetch_assoc($lock_res)) {
+            $conflicts[] = [
+                'booking_id' => $row['id'],
+                'check_in' => $row['check_in'],
+                'check_out' => $row['check_out']
+            ];
+        }
+    }
+
+    if (!empty($conflicts)) {
+        mysqli_rollback($con);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Selected dates are not available. There are conflicting bookings.',
+            'conflicting_bookings' => $conflicts
+        ]);
+        return;
+    }
+
+    // Check and lock unavailability in room_availability table
+    $avail_q = "SELECT date FROM room_availability 
+                WHERE room_id = ? 
+                  AND date >= ? AND date < ? 
+                  AND (available_quantity <= 0 OR total_quantity = 0)
+                FOR UPDATE";
+    $avail_stmt = mysqli_prepare($con, $avail_q);
+    mysqli_stmt_bind_param($avail_stmt, "iss", $input['room_id'], $checkin, $checkout);
+    mysqli_stmt_execute($avail_stmt);
+    $avail_res = mysqli_stmt_get_result($avail_stmt);
+    $unavailable_dates = [];
+    if ($avail_res) {
+        while ($row = mysqli_fetch_assoc($avail_res)) {
+            $unavailable_dates[] = $row['date'];
+        }
+    }
+
+    if (!empty($unavailable_dates)) {
+        mysqli_rollback($con);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Room has unavailable dates in the selected range.',
+            'unavailable_dates' => $unavailable_dates
+        ]);
+        return;
+    }
+
+    // Insert booking (idempotent by booking_token if provided)
     $status = $input['status'] ?? 'confirmed';
     $phone = $input['guest_phone'] ?? '';
     $special_requests = $input['special_requests'] ?? '';
 
-    mysqli_stmt_bind_param(
-        $stmt,
-        "isssssdss",
-        $input['room_id'],
-        $input['guest_name'],
-        $input['guest_email'],
-        $phone,
-        $checkin,
-        $checkout,
-        $total_amount,
-        $status,
-        $special_requests
-    );
+    if ($booking_token) {
+        $insert_query = "INSERT INTO bookings (room_id, guest_name, guest_email, guest_phone, check_in, check_out, 
+                         total_amount, booking_status, special_requests, booking_token, created_at) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+        $stmt = mysqli_prepare($con, $insert_query);
+        mysqli_stmt_bind_param(
+            $stmt,
+            "isssssdsss",
+            $input['room_id'],
+            $input['guest_name'],
+            $input['guest_email'],
+            $phone,
+            $checkin,
+            $checkout,
+            $total_amount,
+            $status,
+            $special_requests,
+            $booking_token
+        );
+    } else {
+        $insert_query = "INSERT INTO bookings (room_id, guest_name, guest_email, guest_phone, check_in, check_out, 
+                         total_amount, booking_status, special_requests, created_at) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+        $stmt = mysqli_prepare($con, $insert_query);
+        mysqli_stmt_bind_param(
+            $stmt,
+            "isssssdss",
+            $input['room_id'],
+            $input['guest_name'],
+            $input['guest_email'],
+            $phone,
+            $checkin,
+            $checkout,
+            $total_amount,
+            $status,
+            $special_requests
+        );
+    }
 
     if (mysqli_stmt_execute($stmt)) {
         $booking_id = mysqli_insert_id($con);
+        mysqli_commit($con);
         echo json_encode([
             'success' => true,
             'message' => 'Booking created successfully',
@@ -191,6 +288,29 @@ function createBooking($con, $input)
             'total_amount' => $total_amount
         ]);
     } else {
+        // Handle duplicate booking_token gracefully
+        if ($booking_token && mysqli_errno($con) === 1062) {
+            // Fetch existing booking by token and return success (idempotent)
+            $ex_q = "SELECT id, check_in, check_out, total_amount FROM bookings WHERE booking_token = ? AND removed = 0";
+            $ex_stmt = mysqli_prepare($con, $ex_q);
+            mysqli_stmt_bind_param($ex_stmt, "s", $booking_token);
+            mysqli_stmt_execute($ex_stmt);
+            $ex_res = mysqli_stmt_get_result($ex_stmt);
+            if ($existing = mysqli_fetch_assoc($ex_res)) {
+                mysqli_commit($con);
+                $existing_nights = (strtotime($existing['check_out']) - strtotime($existing['check_in'])) / (60 * 60 * 24);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Booking already exists for this token',
+                    'booking_id' => $existing['id'],
+                    'nights' => $existing_nights,
+                    'total_amount' => (float)$existing['total_amount'],
+                    'idempotent' => true
+                ]);
+                return;
+            }
+        }
+        mysqli_rollback($con);
         echo json_encode(['success' => false, 'message' => 'Failed to create booking: ' . mysqli_error($con)]);
     }
 }
@@ -333,14 +453,10 @@ function checkBookingConflicts($con, $room_id, $checkin, $checkout, $exclude_boo
               WHERE room_id = ? 
               AND booking_status IN ('confirmed', 'pending') 
               AND removed = 0
-              AND (
-                  (check_in < ? AND check_out > ?) OR
-                  (check_in < ? AND check_out > ?) OR
-                  (check_in >= ? AND check_out <= ?)
-              )";
+              AND (check_in < ? AND check_out > ?)";
 
-    $params = [$room_id, $checkout, $checkin, $checkout, $checkin, $checkin, $checkout];
-    $types = "issssss";
+    $params = [$room_id, $checkout, $checkin];
+    $types = "iss";
 
     if ($exclude_booking_id) {
         $query .= " AND id != ?";

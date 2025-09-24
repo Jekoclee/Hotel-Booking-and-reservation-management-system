@@ -1,18 +1,49 @@
 <?php
 // User-side refunds endpoint
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require('../admin/inc/db_config.php');
 require('../admin/inc/essentials.php');
 require_once('../admin/inc/bookings_schema.php');
 
+// Ensure clean JSON output
+if (function_exists('ini_set')) {
+    ini_set('display_errors', '0');
+}
+error_reporting(0);
+while (ob_get_level()) {
+    ob_end_clean();
+}
 header('Content-Type: application/json');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Only POST requests allowed']);
     exit;
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
+// Read request body; prefer JSON, fallback to form-encoded
+$raw = file_get_contents('php://input');
+$input = null;
+if (is_string($raw) && $raw !== '') {
+    $input = json_decode($raw, true);
+}
+if (!$input || !is_array($input)) {
+    if (!empty($_POST)) {
+        $input = $_POST;
+    } else {
+        $tmp = [];
+        if (is_string($raw)) {
+            parse_str($raw, $tmp);
+        }
+        if (!empty($tmp)) {
+            $input = $tmp;
+        }
+    }
+}
 if (!$input || !isset($input['action'])) {
     echo json_encode(['success' => false, 'message' => 'Invalid request data']);
     exit;
@@ -42,7 +73,8 @@ switch ($action) {
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }
 
-function request_refund($con, $user_id, $input) {
+function request_refund($con, $user_id, $input)
+{
     $booking_id = isset($input['booking_id']) ? (int)$input['booking_id'] : 0;
     $reason = trim($input['reason'] ?? '');
 
@@ -76,21 +108,26 @@ function request_refund($con, $user_id, $input) {
         return;
     }
 
-    if (!in_array($bk['booking_status'], ['confirmed','pending'], true)) {
+    if (!in_array($bk['booking_status'], ['confirmed', 'pending'], true)) {
         echo json_encode(['success' => false, 'message' => 'Only active bookings can be refunded.']);
         return;
     }
 
-    if (in_array($bk['refund_status'], ['requested','approved'], true)) {
+    if (in_array($bk['refund_status'], ['requested', 'approved'], true)) {
         echo json_encode(['success' => false, 'message' => 'Refund already in process or completed.']);
         return;
     }
 
     // Must be before check-in date
-    $today = new DateTime('today');
-    $checkin = new DateTime($bk['check_in']);
-    if ($checkin <= $today) {
-        echo json_encode(['success' => false, 'message' => 'Refunds can only be requested before the check-in date.']);
+    try {
+        $today = new DateTime('today');
+        $checkin = new DateTime($bk['check_in']);
+        if ($checkin <= $today) {
+            echo json_encode(['success' => false, 'message' => 'Refunds can only be requested before the check-in date.']);
+            return;
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Invalid booking dates']);
         return;
     }
 

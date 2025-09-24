@@ -137,12 +137,12 @@ $children = isset($_GET['children']) ? (int)$_GET['children'] : 0;
                                     <i class='bi bi-info-circle me-2'></i>More Details
                                 </a>
                                 <a href='" . (!empty($checkin) && !empty($checkout)
-                                    ? ("room_details.php?id={$room_data['id']}&checkin=" . urlencode($checkin) . "&checkout=" . urlencode($checkout)
-                                        . (!empty($adults) ? ("&adults=" . urlencode($adults)) : "")
-                                        . (isset($children) ? ("&children=" . urlencode($children)) : ""))
-                                    : ("booking_calendar.php?room_id={$room_data['id']}")
-                                ) . "' class='btn btn-primary btn-book'>
-                                    <i class='bi bi-calendar-check me-2'></i>Book Now
+                            ? ("room_details.php?id={$room_data['id']}&checkin=" . urlencode($checkin) . "&checkout=" . urlencode($checkout)
+                                . (!empty($adults) ? ("&adults=" . urlencode($adults)) : "")
+                                . (isset($children) ? ("&children=" . urlencode($children)) : ""))
+                            : ("booking_calendar.php?room_id={$room_data['id']}")
+                        ) . "' class='btn btn-primary btn-book'>
+                                    <i class='bi bi-calendar-check me-2'></i>Check Availability
                                 </a>
                               </div>
                           </div>
