@@ -44,6 +44,7 @@ if (!$input || !is_array($input)) {
         }
     }
 }
+
 if (!$input || !isset($input['action'])) {
     echo json_encode(['success' => false, 'message' => 'Invalid request data']);
     exit;

@@ -57,32 +57,13 @@ if ($user_id > 0) {
       text-transform: capitalize;
     }
 
-    .status-confirmed {
-      background: #d4edda;
-      color: #155724;
-    }
-
-    .status-pending {
-      background: #fff3cd;
-      color: #856404;
-    }
-
-    .status-cancelled {
-      background: #f8d7da;
-      color: #721c24;
-    }
-
-    .status-completed {
-      background: #d1ecf1;
-      color: #0c5460;
-    }
-
-    .badge {
-      font-weight: 600;
-    }
+    .status-confirmed { background: #d4edda; color: #155724; }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+    .status-completed { background: #d1ecf1; color: #0c5460; }
+    .badge { font-weight: 600; }
   </style>
 </head>
-
 <body class="bg-light">
   <?php require('inc/header.php'); ?>
 
@@ -98,61 +79,61 @@ if ($user_id > 0) {
       <div class="alert alert-info">You have no bookings yet. Explore our rooms and make your first reservation!</div>
     <?php else: ?>
       <div class="row g-4">
-        <?php foreach ($bookings as $bk):
+        <?php foreach ($bookings as $bk): 
           $nights = (new DateTime($bk['check_in']))->diff(new DateTime($bk['check_out']))->days;
           $payment_status = $bk['payment_status'] ?? 'pending';
           $refund_status = $bk['refund_status'] ?? 'none';
           $eligible_refund = (
             ($payment_status === 'paid') &&
-            (in_array(($bk['booking_status'] ?? ''), ['confirmed', 'pending'], true)) &&
-            (!in_array($refund_status, ['requested', 'approved'], true)) &&
+            (in_array(($bk['booking_status'] ?? ''), ['confirmed','pending'], true)) &&
+            (!in_array($refund_status, ['requested','approved'], true)) &&
             (new DateTime($bk['check_in']) > new DateTime('today'))
           );
         ?>
-          <div class="col-md-6">
-            <div class="card-ghost p-3 h-100">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <h5 class="fw-bold mb-0"><?= htmlspecialchars($bk['room_name'] ?? 'Room #' . $bk['room_id']) ?></h5>
-                <span class="status-pill status-<?= htmlspecialchars($bk['booking_status']) ?>">
-                  <?= htmlspecialchars($bk['booking_status']) ?>
+        <div class="col-md-6">
+          <div class="card-ghost p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h5 class="fw-bold mb-0"><?= htmlspecialchars($bk['room_name'] ?? 'Room #'.$bk['room_id']) ?></h5>
+              <span class="status-pill status-<?= htmlspecialchars($bk['booking_status']) ?>">
+                <?= htmlspecialchars($bk['booking_status']) ?>
+              </span>
+            </div>
+            <div class="small text-muted mb-2">Booking ID: <?= htmlspecialchars($bk['id']) ?></div>
+            <div class="row g-2 mb-2">
+              <div class="col-6"><strong>Check-in:</strong> <?= date('M j, Y', strtotime($bk['check_in'])) ?></div>
+              <div class="col-6"><strong>Check-out:</strong> <?= date('M j, Y', strtotime($bk['check_out'])) ?></div>
+              <div class="col-6"><strong>Nights:</strong> <?= $nights ?></div>
+              <div class="col-6"><strong>Guests:</strong> <?= (int)$bk['adults'] ?> Adults<?= ((int)$bk['children']>0? ', '.(int)$bk['children'].' Children':'') ?></div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="fw-bold">₱<?= number_format((float)$bk['total_amount'], 2) ?></div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-<?= $payment_status==='paid'?'success':($payment_status==='refunded'?'warning':'secondary') ?>">
+                  Payment: <?= htmlspecialchars(strtoupper($payment_status)) ?>
+                </span>
+                <span class="badge bg-<?= $refund_status==='approved'?'success':($refund_status==='requested'?'info':($refund_status==='rejected'?'danger':'secondary')) ?>">
+                  Refund: <?= htmlspecialchars(strtoupper($refund_status)) ?>
                 </span>
               </div>
-              <div class="small text-muted mb-2">Booking ID: <?= htmlspecialchars($bk['id']) ?></div>
-              <div class="row g-2 mb-2">
-                <div class="col-6"><strong>Check-in:</strong> <?= date('M j, Y', strtotime($bk['check_in'])) ?></div>
-                <div class="col-6"><strong>Check-out:</strong> <?= date('M j, Y', strtotime($bk['check_out'])) ?></div>
-                <div class="col-6"><strong>Nights:</strong> <?= $nights ?></div>
-                <div class="col-6"><strong>Guests:</strong> <?= (int)$bk['adults'] ?> Adults<?= ((int)$bk['children'] > 0 ? ', ' . (int)$bk['children'] . ' Children' : '') ?></div>
-              </div>
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <div class="fw-bold">₱<?= number_format((float)$bk['total_amount'], 2) ?></div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="badge bg-<?= $payment_status === 'paid' ? 'success' : ($payment_status === 'refunded' ? 'warning' : 'secondary') ?>">
-                    Payment: <?= htmlspecialchars(strtoupper($payment_status)) ?>
-                  </span>
-                  <span class="badge bg-<?= $refund_status === 'approved' ? 'success' : ($refund_status === 'requested' ? 'info' : ($refund_status === 'rejected' ? 'danger' : 'secondary')) ?>">
-                    Refund: <?= htmlspecialchars(strtoupper($refund_status)) ?>
-                  </span>
-                </div>
-              </div>
-              <div class="d-flex justify-content-between align-items-center">
-                <div></div>
-                <div class="d-flex gap-2">
-                  <a class="btn btn-outline-primary btn-sm" href="booking_confirmation.php?room_id=<?= (int)$bk['room_id'] ?>&check_in=<?= urlencode($bk['check_in']) ?>&check_out=<?= urlencode($bk['check_out']) ?>&adults=<?= (int)$bk['adults'] ?>&children=<?= (int)$bk['children'] ?>">
-                    View
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div></div>
+              <div class="d-flex gap-2">
+                <a class="btn btn-outline-primary btn-sm" href="booking_confirmation.php?room_id=<?= (int)$bk['room_id'] ?>&check_in=<?= urlencode($bk['check_in']) ?>&check_out=<?= urlencode($bk['check_out']) ?>&adults=<?= (int)$bk['adults'] ?>&children=<?= (int)$bk['children'] ?>">
+                  View
+                </a>
+                <?php if ($payment_status === 'pending'): ?>
+                  <a class="btn btn-success btn-sm" href="booking_confirmation.php?room_id=<?= (int)$bk['room_id'] ?>&check_in=<?= urlencode($bk['check_in']) ?>&check_out=<?= urlencode($bk['check_out']) ?>&adults=<?= (int)$bk['adults'] ?>&children=<?= (int)$bk['children'] ?>">
+                    Pay Now
                   </a>
-                  <?php if ($payment_status === 'pending'): ?>
-                    <a class="btn btn-success btn-sm" href="booking_confirmation.php?room_id=<?= (int)$bk['room_id'] ?>&check_in=<?= urlencode($bk['check_in']) ?>&check_out=<?= urlencode($bk['check_out']) ?>&adults=<?= (int)$bk['adults'] ?>&children=<?= (int)$bk['children'] ?>">
-                      Pay Now
-                    </a>
-                  <?php endif; ?>
-                  <?php if ($eligible_refund): ?>
-                    <button class="btn btn-outline-danger btn-sm" onclick="openRefundModal(<?= (int)$bk['id'] ?>)">Request Refund</button>
-                  <?php endif; ?>
-                </div>
+                <?php endif; ?>
+                <?php if ($eligible_refund): ?>
+                  <button class="btn btn-outline-danger btn-sm" onclick="openRefundModal(<?= (int)$bk['id'] ?>)">Request Refund</button>
+                <?php endif; ?>
               </div>
             </div>
           </div>
+        </div>
         <?php endforeach; ?>
       </div>
     <?php endif; ?>
@@ -198,45 +179,22 @@ if ($user_id > 0) {
     async function submitRefund() {
       const booking_id = parseInt(document.getElementById('refundBookingId').value, 10);
       const reason = document.getElementById('refundReason').value.trim();
-      if (!booking_id) {
-        alert('Invalid booking');
-        return;
-      }
-      if (reason.length < 5) {
-        alert('Please provide a brief reason (at least 5 characters).');
-        return;
-      }
+      if (!booking_id) { alert('Invalid booking'); return; }
+      if (reason.length < 5) { alert('Please provide a brief reason (at least 5 characters).'); return; }
 
       try {
         const res = await fetch('ajax/refunds.php', {
           method: 'POST',
-          cache: 'no-store',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            action: 'request_refund',
-            booking_id,
-            reason
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'request_refund', booking_id, reason })
         });
-
-        // Graceful parsing: handle non-JSON responses
-        const ct = res.headers.get('content-type') || '';
-        if (!ct.includes('application/json')) {
-          const text = await res.text();
-          alert(text || 'Server returned a non-JSON response.');
-          return;
-        }
-
         const data = await res.json();
-        if (data && data.success) {
+        if (data.success) {
           refundModal.hide();
-          alert((data && data.message) ? data.message : 'Refund request submitted');
+          alert(data.message || 'Refund request submitted');
           window.location.reload();
         } else {
-          alert((data && data.message) ? data.message : 'Failed to submit refund request');
+          alert(data.message || 'Failed to submit refund request');
         }
       } catch (e) {
         alert('Network error while submitting refund request');
@@ -244,5 +202,4 @@ if ($user_id > 0) {
     }
   </script>
 </body>
-
 </html>

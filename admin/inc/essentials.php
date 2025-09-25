@@ -28,8 +28,11 @@ if (!defined('ESSENTIALS_INCLUDED')) {
 
     ///sendgrid api key
 
-    define('SENDGRID_API_KEY', getenv('SENDGRID_API_KEY') ?: '')
-
+    // Do NOT hardcode secrets; read from environment variable instead.
+    // Set this in your environment, e.g., on Windows PowerShell:
+    //   $env:SENDGRID_API_KEY = "<your-api-key>"
+    // Or via Apache/PHP-FPM environment configs.
+    define('SENDGRID_API_KEY', getenv('SENDGRID_API_KEY') ?: '');
     function adminLogin()
     {
         if (session_status() == PHP_SESSION_NONE) {

@@ -21,7 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Get POST data
 // Get request body and attempt JSON decode, with fallbacks to form data
 $raw = file_get_contents('php://input');
 $input = null;

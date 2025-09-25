@@ -1,0 +1,1920 @@
+<?php if (session_status() === PHP_SESSION_NONE) { session_start(); } ?>
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Leisure Coast Resort - HOME</title>
+    <?php require('inc/links.php'); ?>
+</head>
+<?php $isLoggedIn = (isset($_SESSION['login']) && $_SESSION['login'] === true) ? '1' : '0'; ?>
+<body class="bg-light home-page" data-logged-in="<?php echo $isLoggedIn; ?>">
+<?php require('inc/header.php'); ?>
+    <style>
+    /* Rooms Section */
+    .spacing-section {
+        padding: 80px 0;
+        background: #f8f9fa;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 4px;
+        background: linear-gradient(45deg, #007bff 0%, #0056b3 100%);
+        border-radius: 2px;
+    }
+
+    .room-slideshow-container {
+        position: relative;
+        margin: 0 auto;
+        max-width: 1000px;
+    }
+
+    .room-slideshow-card {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .room-slideshow-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+
+    .room-slide-content {
+        display: flex;
+        flex-direction: row;
+        min-height: 500px;
+        background: #ffffff;
+    }
+
+    .room-image-container {
+        position: relative;
+        width: 60%;
+        height: 500px;
+        overflow: hidden;
+    }
+
+    .room-slide-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .room-slideshow-card:hover .room-slide-image {
+        transform: scale(1.02);
+    }
+
+    .room-slide-info {
+        padding: 40px 30px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        width: 40%;
+        justify-content: center;
+        background: #ffffff;
+    }
+
+    .room-slide-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 20px;
+        line-height: 1.3;
+    }
+
+    .room-slide-price {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .room-slide-price h4 {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #007bff;
+        margin: 0;
+    }
+
+    .room-slide-price small {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 400;
+    }
+
+    .room-slide-features {
+        margin-bottom: 25px;
+    }
+
+    .room-slide-features h6 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 10px;
+        font-size: 1rem;
+    }
+
+    .badge {
+        background: #e9ecef;
+        color: #495057;
+        font-weight: 500;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        margin: 2px;
+    }
+
+    .room-slide-guests {
+        margin-bottom: 25px;
+    }
+
+    .room-slide-guests h6 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 10px;
+        font-size: 1rem;
+    }
+
+    .room-slide-description {
+        color: #6c757d;
+        line-height: 1.8;
+        margin-bottom: 40px;
+        flex-grow: 1;
+        font-size: 1.1rem;
+        font-weight: 400;
+    }
+
+    .room-slide-buttons {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-top: auto;
+    }
+
+    .btn-outline-primary {
+        border: 2px solid #2c3e50;
+        color: #2c3e50;
+        background: transparent;
+        padding: 12px 30px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-radius: 0;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-outline-primary:hover {
+        background: #2c3e50;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 62, 80, 0.3);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        border: none;
+        color: #ffffff;
+        padding: 12px 30px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-radius: 0;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 62, 80, 0.4);
+    }
+
+    .room-slide-indicators {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        padding: 40px 20px;
+        background: #ffffff;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .room-indicator {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: #dee2e6;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        border: 2px solid transparent;
+    }
+
+    .room-indicator.active {
+        background: #2c3e50;
+        transform: scale(1.3);
+        border: 2px solid #ffffff;
+        box-shadow: 0 0 0 2px #2c3e50;
+    }
+
+    .room-slide-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,0.95);
+        border: 2px solid #2c3e50;
+        width: 60px;
+        height: 60px;
+        border-radius: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: #2c3e50;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10;
+        font-weight: 600;
+    }
+
+    .room-slide-nav:hover {
+        background: #2c3e50;
+        color: #ffffff;
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 10px 30px rgba(44, 62, 80, 0.3);
+    }
+
+    .room-slide-prev {
+        left: 30px;
+    }
+
+    .room-slide-next {
+        right: 30px;
+    }
+
+    /* B Hotel QC Inspired Responsive Design */
+    @media (max-width: 992px) {
+        .room-slide-content {
+            flex-direction: column;
+            min-height: auto;
+        }
+        
+        .room-image-container {
+            width: 100%;
+            height: 400px;
+        }
+        
+        .room-slide-info {
+            width: 100%;
+            padding: 40px 30px;
+        }
+        
+        .room-slide-title {
+            font-size: 2.2rem;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .spacing-section {
+            padding: 60px 0;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 40px;
+        }
+        
+        .room-slide-content {
+            flex-direction: column;
+            min-height: auto;
+        }
+        
+        .room-image-container {
+            width: 100%;
+            height: 300px;
+        }
+        
+        .room-slide-info {
+            width: 100%;
+            padding: 30px 20px;
+        }
+        
+        .room-slide-title {
+            font-size: 1.8rem;
+        }
+        
+        .room-slide-price h4 {
+            font-size: 2rem;
+        }
+        
+        .room-slide-buttons {
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .room-slide-nav {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+        }
+        
+        .room-slide-prev {
+            left: 15px;
+        }
+        
+        .room-slide-next {
+            right: 15px;
+        }
+        
+        .room-slide-indicators {
+            padding: 30px 20px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .room-slide-info {
+            padding: 25px 15px;
+        }
+        
+        .room-slide-title {
+            font-size: 1.5rem;
+        }
+        
+        .btn-outline-primary,
+        .btn-primary {
+            padding: 10px 20px;
+            font-size: 0.8rem;
+        }
+    }
+    </style>
+
+    <script>
+    // Room slideshow functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const rooms = <?php echo json_encode($rooms_array); ?>;
+        let currentSlide = 0;
+        let slideInterval;
+
+        const roomImage = document.getElementById('roomImage');
+        const roomTitle = document.getElementById('roomTitle');
+        const roomPrice = document.getElementById('roomPrice');
+        const roomFeatures = document.getElementById('roomFeatures');
+        const roomGuests = document.getElementById('roomGuests');
+        const roomDescription = document.getElementById('roomDescription');
+        const bookNowBtn = document.getElementById('bookNowBtn');
+        const moreDetailsBtn = document.getElementById('moreDetailsBtn');
+        const indicatorsContainer = document.getElementById('roomIndicators');
+        const prevBtn = document.getElementById('prevSlide');
+        const nextBtn = document.getElementById('nextSlide');
+
+        // Guard: if required DOM elements are missing, abort to avoid errors
+        if (!roomImage || !roomTitle || !roomPrice || !roomFeatures || !roomGuests || !roomDescription || !bookNowBtn || !moreDetailsBtn || !indicatorsContainer || !prevBtn || !nextBtn) {
+            return;
+        }
+
+        // Create indicators
+        function createIndicators() {
+            indicatorsContainer.innerHTML = '';
+            rooms.forEach((_, index) => {
+                const indicator = document.createElement('div');
+                indicator.className = `room-indicator ${index === 0 ? 'active' : ''}`;
+                indicator.addEventListener('click', () => goToSlide(index));
+                indicatorsContainer.appendChild(indicator);
+            });
+        }
+
+        // Update slide content
+        function updateSlide(index) {
+            const room = rooms[index];
+            
+            roomImage.src = room.image;
+            roomImage.alt = room.name;
+            roomTitle.textContent = room.name;
+            roomPrice.textContent = `₱${room.price}`;
+            roomFeatures.innerHTML = `
+                <h6 class="mb-2 fw-semibold" style="color: #495057;">Features</h6>
+                <div class="d-flex flex-wrap">${room.features}</div>
+            `;
+            roomGuests.innerHTML = `
+                <h6 class="mb-2 fw-semibold" style="color: #495057;">Guests</h6>
+                <div class="d-flex gap-2">
+                    <span class="badge">
+                        <i class="bi bi-person-fill me-1"></i>${room.adult} Adults
+                    </span>
+                    <span class="badge">
+                        <i class="bi bi-people-fill me-1"></i>${room.children} Children
+                    </span>
+                </div>
+            `;
+            roomDescription.textContent = room.description || 'Experience luxury and comfort in this beautifully designed room with modern amenities and stunning views.';
+            
+            // Update buttons
+            bookNowBtn.onclick = () => checkLogin(room.id);
+            moreDetailsBtn.href = `room_details.php?id=${room.id}`;
+
+            // Update indicators
+            document.querySelectorAll('.room-indicator').forEach((indicator, i) => {
+                indicator.classList.toggle('active', i === index);
+            });
+        }
+
+        // Go to specific slide
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSlide(currentSlide);
+            resetInterval();
+        }
+
+        // Next slide
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % rooms.length;
+            updateSlide(currentSlide);
+        }
+
+        // Previous slide
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + rooms.length) % rooms.length;
+            updateSlide(currentSlide);
+        }
+
+        // Auto slide functionality
+        function startAutoSlide() {
+            slideInterval = setInterval(nextSlide, 5000); // 5 seconds
+        }
+
+        function resetInterval() {
+            clearInterval(slideInterval);
+            startAutoSlide();
+        }
+
+        // Event listeners
+        nextBtn.addEventListener('click', () => {
+            nextSlide();
+            resetInterval();
+        });
+
+        prevBtn.addEventListener('click', () => {
+            prevSlide();
+            resetInterval();
+        });
+
+        // Pause on hover
+        const slideshow = document.getElementById('roomSlideshow');
+        slideshow.addEventListener('mouseenter', () => clearInterval(slideInterval));
+        slideshow.addEventListener('mouseleave', startAutoSlide);
+
+        // Initialize
+        if (rooms.length > 0) {
+            createIndicators();
+            updateSlide(0);
+            startAutoSlide();
+        }
+    });
+    </script>
+
+    <!-- Modern Facilities Slider Section -->
+    <div class="facilities-slider-section py-5">
+        <div class="container">
+            <h2 class="section-title text-center mb-5">OUR FACILITIES</h2>
+
+            <?php
+            $facilities_res = select("SELECT * FROM `facilities` ORDER BY `id` DESC", [], "");
+            $facilities_array = [];
+            while ($facilities_data = mysqli_fetch_assoc($facilities_res)) {
+                $facilities_array[] = $facilities_data;
+            }
+            ?>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-md-10">
+                    <div class="facility-slider-card" id="facilitySlider">
+                        <div class="facility-slider-content">
+                            <div class="facility-image-container">
+                                <img src="" alt="" class="facility-slider-image" id="facilityImage">
+                                <div class="facility-overlay"></div>
+                            </div>
+                            <div class="facility-info">
+                                <h3 class="facility-slider-title" id="facilityTitle"></h3>
+                                <p class="facility-slider-description" id="facilityDescription"></p>
+                                <div class="facility-slider-controls">
+                                    <div class="slider-dots" id="sliderDots"></div>
+                                    <a href="facilities.php" class="btn btn-facility-modern">
+                                        <i class="bi bi-arrow-right me-2"></i>Explore All Facilities
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Facilities data from PHP
+        const facilitiesData = <?php echo json_encode($facilities_array); ?>;
+        const facilitiesImgPath = "<?php echo FACILITIES_IMG_PATH; ?>";
+
+        console.log('Facilities Data:', facilitiesData);
+        console.log('Image Path:', facilitiesImgPath);
+
+        let currentFacilityIndex = 0;
+        let sliderInterval;
+
+        function initializeFacilitySlider() {
+            console.log('Initializing facility slider...');
+
+            if (facilitiesData.length === 0) {
+                console.log('No facilities data found!');
+                return;
+            }
+
+            // Create dots
+            const dotsContainer = document.getElementById('sliderDots');
+            if (!dotsContainer) {
+                console.error('Dots container not found!');
+                return;
+            }
+
+            // Clear existing dots
+            dotsContainer.innerHTML = '';
+
+            facilitiesData.forEach((_, index) => {
+                const dot = document.createElement('span');
+                dot.className = 'slider-dot';
+                dot.addEventListener('click', () => goToSlide(index));
+                dotsContainer.appendChild(dot);
+            });
+
+            console.log('Created', facilitiesData.length, 'dots');
+
+            // Show first facility
+            showFacility(0);
+
+            // Start auto-rotation
+            startAutoRotation();
+        }
+
+        function showFacility(index) {
+            console.log('Showing facility:', index);
+
+            if (!facilitiesData[index]) {
+                console.error('Facility not found at index:', index);
+                return;
+            }
+
+            const facility = facilitiesData[index];
+            const image = document.getElementById('facilityImage');
+            const title = document.getElementById('facilityTitle');
+            const description = document.getElementById('facilityDescription');
+            const dots = document.querySelectorAll('.slider-dot');
+
+            if (!image || !title || !description) {
+                console.error('Required elements not found!');
+                return;
+            }
+
+            // Update content with fade effect
+            const card = document.getElementById('facilitySlider');
+            if (card) {
+                card.style.opacity = '0.7';
+            }
+
+            setTimeout(() => {
+                const imageSrc = facilitiesImgPath + facility.icon;
+                console.log('Loading image:', imageSrc);
+
+                image.src = imageSrc;
+                image.alt = facility.name;
+                title.textContent = facility.name;
+                description.textContent = facility.description;
+
+                // Update dots
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+
+                if (card) {
+                    card.style.opacity = '1';
+                }
+            }, 200);
+
+            currentFacilityIndex = index;
+        }
+
+        function goToSlide(index) {
+            showFacility(index);
+            resetAutoRotation();
+        }
+
+        function nextSlide() {
+            const nextIndex = (currentFacilityIndex + 1) % facilitiesData.length;
+            showFacility(nextIndex);
+        }
+
+        function startAutoRotation() {
+            sliderInterval = setInterval(nextSlide, 4000); // Change every 4 seconds
+            console.log('Auto-rotation started');
+        }
+
+        function resetAutoRotation() {
+            clearInterval(sliderInterval);
+            startAutoRotation();
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing slider...');
+            initializeFacilitySlider();
+        });
+
+        // Pause on hover
+        const facilitySlider = document.getElementById('facilitySlider');
+        if (facilitySlider) {
+            facilitySlider.addEventListener('mouseenter', () => {
+                console.log('Mouse entered, pausing rotation');
+                clearInterval(sliderInterval);
+            });
+
+            facilitySlider.addEventListener('mouseleave', () => {
+                console.log('Mouse left, resuming rotation');
+                startAutoRotation();
+            });
+        }
+    </script>
+
+    <!-- Testimonials Section -->
+    <div class="testimonials">
+        <div class="container">
+            <h2 class="section-title text-center mb-5">WHAT OUR GUESTS SAY</h2>
+
+            <div class="row g-4">
+                <!-- Testimonial 1 -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="testimonial-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+                                class="testimonial-avatar me-3" alt="John Smith">
+                            <div>
+                                <h6 class="testimonial-author">John Smith</h6>
+                                <small class="text-muted">Business Traveler</small>
+                            </div>
+                        </div>
+                        <div class="testimonial-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            "Exceptional service and beautiful location! The staff went above and beyond to make our stay memorable. The facilities are top-notch and the rooms are incredibly comfortable."
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="testimonial-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
+                                class="testimonial-avatar me-3" alt="Sarah Johnson">
+                            <div>
+                                <h6 class="testimonial-author">Sarah Johnson</h6>
+                                <small class="text-muted">Family Vacation</small>
+                            </div>
+                        </div>
+                        <div class="testimonial-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-half"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            "Perfect for families! The kids loved the facilities and we enjoyed the peaceful atmosphere. Great value for money and excellent location near all the attractions."
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="testimonial-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+                                class="testimonial-avatar me-3" alt="Michael Chen">
+                            <div>
+                                <h6 class="testimonial-author">Michael Chen</h6>
+                                <small class="text-muted">Couple's Getaway</small>
+                            </div>
+                        </div>
+                        <div class="testimonial-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            "Romantic and serene! The perfect place for a couple's retreat. Beautiful views, excellent dining, and the spa services were absolutely divine. Highly recommended!"
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Reach Us -->
+
+    <?php
+    $contact_q = "SELECT * FROM `contact_details` WHERE `sr_no` =?";
+    $values = [1];
+    $contact_r = mysqli_fetch_assoc(select($contact_q, $values, 'i'));
+
+    ?>
+    <!-- Contact Section -->
+    <div class="contact">
+        <div class="container">
+            <h2 class="section-title text-center mb-5 text-white">GET IN TOUCH</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="map-container">
+                        <iframe class="w-100" height="450" src="<?php echo $contact_r['iframe'] ?>"
+                            loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="contact-card mb-4">
+                        <div class="contact-icon">
+                            <i class="bi bi-telephone-fill"></i>
+                        </div>
+                        <h5 class="text-white mb-3">Call Us</h5>
+                        <a href="tel: +<?php echo $contact_r['pn1'] ?>" class="d-block mb-2 text-white text-decoration-none">
+                            <i class="bi bi-telephone me-2"></i>+<?php echo $contact_r['pn1'] ?>
+                        </a>
+                        <?php
+                        if ($contact_r['pn2'] != '') {
+                            echo <<<data
+                            <a href="tel: +$contact_r[pn2]" class="d-block text-white text-decoration-none">
+                                <i class="bi bi-telephone me-2"></i>+$contact_r[pn2]
+                            </a>
+data;
+                        }
+                        ?>
+                    </div>
+
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="bi bi-share-fill"></i>
+                        </div>
+                        <h5 class="text-white mb-3">Follow Us</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <?php
+                            if ($contact_r['fb'] != '') {
+                                echo <<<data
+                                <a href="$contact_r[fb]" class="social">
+                                    <i class="bi bi-facebook"></i>
+                                </a>
+data;
+                            }
+                            ?>
+                            <a href="<?php echo $contact_r['insta'] ?>" class="social">
+                                <i class="bi bi-instagram"></i>
+                            </a>
+                            <a href="#" class="social">
+                                <i class="bi bi-twitter"></i>
+                            </a>
+                            <a href="#" class="social">
+                                <i class="bi bi-youtube"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <br><br><br>
+    <br><br><br>
+
+
+    <?php require('inc/footer.php'); ?>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTop">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+
+
+</body>
+
+</html>
+<style>
+    .bg-light home-page {
+        padding: 80px 0;
+        background: #f8f9fa;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 4px;
+        background: linear-gradient(45deg, #007bff 0%, #0056b3 100%);
+        border-radius: 2px;
+    }
+
+    .room-slideshow-container {
+        position: relative;
+        margin: 0 auto;
+        max-width: 1000px;
+    }
+
+    .room-slideshow-card {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .room-slideshow-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+
+    .room-slide-content {
+        display: flex;
+        flex-direction: row;
+        min-height: 500px;
+        background: #ffffff;
+    }
+
+    .room-image-container {
+        position: relative;
+        width: 60%;
+        height: 500px;
+        overflow: hidden;
+    }
+
+    .room-slide-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .room-slideshow-card:hover .room-slide-image {
+        transform: scale(1.02);
+    }
+
+    .room-slide-info {
+        padding: 40px 30px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        width: 40%;
+        justify-content: center;
+        background: #ffffff;
+    }
+
+    .room-slide-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 20px;
+        line-height: 1.3;
+    }
+
+    .room-slide-price {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .room-slide-price h4 {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #007bff;
+        margin: 0;
+    }
+
+    .room-slide-price small {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 400;
+    }
+
+    .room-slide-features {
+        margin-bottom: 25px;
+    }
+
+    .room-slide-features h6 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 10px;
+        font-size: 1rem;
+    }
+
+    .badge {
+        background: #e9ecef;
+        color: #495057;
+        font-weight: 500;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        margin: 2px;
+    }
+
+    .room-slide-guests {
+        margin-bottom: 25px;
+    }
+
+    .room-slide-guests h6 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 10px;
+        font-size: 1rem;
+    }
+
+    .room-slide-description {
+        color: #6c757d;
+        line-height: 1.8;
+        margin-bottom: 40px;
+        flex-grow: 1;
+        font-size: 1.1rem;
+        font-weight: 400;
+    }
+
+    .room-slide-buttons {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-top: auto;
+    }
+
+    .btn-outline-primary {
+        border: 2px solid #2c3e50;
+        color: #2c3e50;
+        background: transparent;
+        padding: 12px 30px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-radius: 0;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-outline-primary:hover {
+        background: #2c3e50;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 62, 80, 0.3);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        border: none;
+        color: #ffffff;
+        padding: 12px 30px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-radius: 0;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 62, 80, 0.4);
+    }
+
+    .room-slide-indicators {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        padding: 40px 20px;
+        background: #ffffff;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .room-indicator {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: #dee2e6;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        border: 2px solid transparent;
+    }
+
+    .room-indicator.active {
+        background: #2c3e50;
+        transform: scale(1.3);
+        border: 2px solid #ffffff;
+        box-shadow: 0 0 0 2px #2c3e50;
+    }
+
+    .room-slide-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,0.95);
+        border: 2px solid #2c3e50;
+        width: 60px;
+        height: 60px;
+        border-radius: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: #2c3e50;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10;
+        font-weight: 600;
+    }
+
+    .room-slide-nav:hover {
+        background: #2c3e50;
+        color: #ffffff;
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 10px 30px rgba(44, 62, 80, 0.3);
+    }
+
+    .room-slide-prev {
+        left: 30px;
+    }
+
+    .room-slide-next {
+        right: 30px;
+    }
+
+    /* B Hotel QC Inspired Responsive Design */
+    @media (max-width: 992px) {
+        .room-slide-content {
+            flex-direction: column;
+            min-height: auto;
+        }
+        
+        .room-image-container {
+            width: 100%;
+            height: 400px;
+        }
+        
+        .room-slide-info {
+            width: 100%;
+            padding: 40px 30px;
+        }
+        
+        .room-slide-title {
+            font-size: 2.2rem;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .spacing-section {
+            padding: 60px 0;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 40px;
+        }
+        
+        .room-slide-content {
+            flex-direction: column;
+            min-height: auto;
+        }
+        
+        .room-image-container {
+            width: 100%;
+            height: 300px;
+        }
+        
+        .room-slide-info {
+            width: 100%;
+            padding: 30px 20px;
+        }
+        
+        .room-slide-title {
+            font-size: 1.8rem;
+        }
+        
+        .room-slide-price h4 {
+            font-size: 2rem;
+        }
+        
+        .room-slide-buttons {
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .room-slide-nav {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+        }
+        
+        .room-slide-prev {
+            left: 15px;
+        }
+        
+        .room-slide-next {
+            right: 15px;
+        }
+        
+        .room-slide-indicators {
+            padding: 30px 20px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .room-slide-info {
+            padding: 25px 15px;
+        }
+        
+        .room-slide-title {
+            font-size: 1.5rem;
+        }
+        
+        .btn-outline-primary,
+        .btn-primary {
+            padding: 10px 20px;
+            font-size: 0.8rem;
+        }
+    }
+    </style>
+
+    <script>
+    // Room slideshow functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const rooms = <?php echo json_encode($rooms_array); ?>;
+        let currentSlide = 0;
+        let slideInterval;
+
+        const roomImage = document.getElementById('roomImage');
+        const roomTitle = document.getElementById('roomTitle');
+        const roomPrice = document.getElementById('roomPrice');
+        const roomFeatures = document.getElementById('roomFeatures');
+        const roomGuests = document.getElementById('roomGuests');
+        const roomDescription = document.getElementById('roomDescription');
+        const bookNowBtn = document.getElementById('bookNowBtn');
+        const moreDetailsBtn = document.getElementById('moreDetailsBtn');
+        const indicatorsContainer = document.getElementById('roomIndicators');
+        const prevBtn = document.getElementById('prevSlide');
+        const nextBtn = document.getElementById('nextSlide');
+
+        // Create indicators
+        function createIndicators() {
+            indicatorsContainer.innerHTML = '';
+            rooms.forEach((_, index) => {
+                const indicator = document.createElement('div');
+                indicator.className = `room-indicator ${index === 0 ? 'active' : ''}`;
+                indicator.addEventListener('click', () => goToSlide(index));
+                indicatorsContainer.appendChild(indicator);
+            });
+        }
+
+        // Update slide content
+        function updateSlide(index) {
+            const room = rooms[index];
+            
+            roomImage.src = room.image;
+            roomImage.alt = room.name;
+            roomTitle.textContent = room.name;
+            roomPrice.textContent = `₱${room.price}`;
+            roomFeatures.innerHTML = `
+                <h6 class="mb-2 fw-semibold" style="color: #495057;">Features</h6>
+                <div class="d-flex flex-wrap">${room.features}</div>
+            `;
+            roomGuests.innerHTML = `
+                <h6 class="mb-2 fw-semibold" style="color: #495057;">Guests</h6>
+                <div class="d-flex gap-2">
+                    <span class="badge">
+                        <i class="bi bi-person-fill me-1"></i>${room.adult} Adults
+                    </span>
+                    <span class="badge">
+                        <i class="bi bi-people-fill me-1"></i>${room.children} Children
+                    </span>
+                </div>
+            `;
+            roomDescription.textContent = room.description || 'Experience luxury and comfort in this beautifully designed room with modern amenities and stunning views.';
+            
+            // Update buttons
+            bookNowBtn.onclick = () => checkLogin(room.id);
+            moreDetailsBtn.href = `room_details.php?id=${room.id}`;
+
+            // Update indicators
+            document.querySelectorAll('.room-indicator').forEach((indicator, i) => {
+                indicator.classList.toggle('active', i === index);
+            });
+        }
+
+        // Go to specific slide
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSlide(currentSlide);
+            resetInterval();
+        }
+
+        // Next slide
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % rooms.length;
+            updateSlide(currentSlide);
+        }
+
+        // Previous slide
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + rooms.length) % rooms.length;
+            updateSlide(currentSlide);
+        }
+
+        // Auto slide functionality
+        function startAutoSlide() {
+            slideInterval = setInterval(nextSlide, 5000); // 5 seconds
+        }
+
+        function resetInterval() {
+            clearInterval(slideInterval);
+            startAutoSlide();
+        }
+
+        // Event listeners
+        nextBtn.addEventListener('click', () => {
+            nextSlide();
+            resetInterval();
+        });
+
+        prevBtn.addEventListener('click', () => {
+            prevSlide();
+            resetInterval();
+        });
+
+        // Pause on hover
+        const slideshow = document.getElementById('roomSlideshow');
+        slideshow.addEventListener('mouseenter', () => clearInterval(slideInterval));
+        slideshow.addEventListener('mouseleave', startAutoSlide);
+
+        // Initialize
+        if (rooms.length > 0) {
+            createIndicators();
+            updateSlide(0);
+            startAutoSlide();
+        }
+    });
+    </script>
+
+    <!-- Modern Facilities Slider Section -->
+    <div class="facilities-slider-section py-5">
+        <div class="container">
+            <h2 class="section-title text-center mb-5">OUR FACILITIES</h2>
+
+            <?php
+            $facilities_res = select("SELECT * FROM `facilities` ORDER BY `id` DESC", [], "");
+            $facilities_array = [];
+            while ($facilities_data = mysqli_fetch_assoc($facilities_res)) {
+                $facilities_array[] = $facilities_data;
+            }
+            ?>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-md-10">
+                    <div class="facility-slider-card" id="facilitySlider">
+                        <div class="facility-slider-content">
+                            <div class="facility-image-container">
+                                <img src="" alt="" class="facility-slider-image" id="facilityImage">
+                                <div class="facility-overlay"></div>
+                            </div>
+                            <div class="facility-info">
+                                <h3 class="facility-slider-title" id="facilityTitle"></h3>
+                                <p class="facility-slider-description" id="facilityDescription"></p>
+                                <div class="facility-slider-controls">
+                                    <div class="slider-dots" id="sliderDots"></div>
+                                    <a href="facilities.php" class="btn btn-facility-modern">
+                                        <i class="bi bi-arrow-right me-2"></i>Explore All Facilities
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Facilities data from PHP
+        const facilitiesData = <?php echo json_encode($facilities_array); ?>;
+        const facilitiesImgPath = "<?php echo FACILITIES_IMG_PATH; ?>";
+
+        console.log('Facilities Data:', facilitiesData);
+        console.log('Image Path:', facilitiesImgPath);
+
+        let currentFacilityIndex = 0;
+        let sliderInterval;
+
+        function initializeFacilitySlider() {
+            console.log('Initializing facility slider...');
+
+            if (facilitiesData.length === 0) {
+                console.log('No facilities data found!');
+                return;
+            }
+
+            // Create dots
+            const dotsContainer = document.getElementById('sliderDots');
+            if (!dotsContainer) {
+                console.error('Dots container not found!');
+                return;
+            }
+
+            // Clear existing dots
+            dotsContainer.innerHTML = '';
+
+            facilitiesData.forEach((_, index) => {
+                const dot = document.createElement('span');
+                dot.className = 'slider-dot';
+                dot.addEventListener('click', () => goToSlide(index));
+                dotsContainer.appendChild(dot);
+            });
+
+            console.log('Created', facilitiesData.length, 'dots');
+
+            // Show first facility
+            showFacility(0);
+
+            // Start auto-rotation
+            startAutoRotation();
+        }
+
+        function showFacility(index) {
+            console.log('Showing facility:', index);
+
+            if (!facilitiesData[index]) {
+                console.error('Facility not found at index:', index);
+                return;
+            }
+
+            const facility = facilitiesData[index];
+            const image = document.getElementById('facilityImage');
+            const title = document.getElementById('facilityTitle');
+            const description = document.getElementById('facilityDescription');
+            const dots = document.querySelectorAll('.slider-dot');
+
+            if (!image || !title || !description) {
+                console.error('Required elements not found!');
+                return;
+            }
+
+            // Update content with fade effect
+            const card = document.getElementById('facilitySlider');
+            if (card) {
+                card.style.opacity = '0.7';
+            }
+
+            setTimeout(() => {
+                const imageSrc = facilitiesImgPath + facility.icon;
+                console.log('Loading image:', imageSrc);
+
+                image.src = imageSrc;
+                image.alt = facility.name;
+                title.textContent = facility.name;
+                description.textContent = facility.description;
+
+                // Update dots
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+
+                if (card) {
+                    card.style.opacity = '1';
+                }
+            }, 200);
+
+            currentFacilityIndex = index;
+        }
+
+        function goToSlide(index) {
+            showFacility(index);
+            resetAutoRotation();
+        }
+
+        function nextSlide() {
+            const nextIndex = (currentFacilityIndex + 1) % facilitiesData.length;
+            showFacility(nextIndex);
+        }
+
+        function startAutoRotation() {
+            sliderInterval = setInterval(nextSlide, 4000); // Change every 4 seconds
+            console.log('Auto-rotation started');
+        }
+
+        function resetAutoRotation() {
+            clearInterval(sliderInterval);
+            startAutoRotation();
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing slider...');
+            initializeFacilitySlider();
+        });
+
+        // Pause on hover
+        const facilitySlider = document.getElementById('facilitySlider');
+        if (facilitySlider) {
+            facilitySlider.addEventListener('mouseenter', () => {
+                console.log('Mouse entered, pausing rotation');
+                clearInterval(sliderInterval);
+            });
+
+            facilitySlider.addEventListener('mouseleave', () => {
+                console.log('Mouse left, resuming rotation');
+                startAutoRotation();
+            });
+        }
+    </script>
+
+    <!-- Testimonials Section -->
+    <div class="testimonials">
+        <div class="container">
+            <h2 class="section-title text-center mb-5">WHAT OUR GUESTS SAY</h2>
+
+            <div class="row g-4">
+                <!-- Testimonial 1 -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="testimonial-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+                                class="testimonial-avatar me-3" alt="John Smith">
+                            <div>
+                                <h6 class="testimonial-author">John Smith</h6>
+                                <small class="text-muted">Business Traveler</small>
+                            </div>
+                        </div>
+                        <div class="testimonial-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            "Exceptional service and beautiful location! The staff went above and beyond to make our stay memorable. The facilities are top-notch and the rooms are incredibly comfortable."
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="testimonial-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
+                                class="testimonial-avatar me-3" alt="Sarah Johnson">
+                            <div>
+                                <h6 class="testimonial-author">Sarah Johnson</h6>
+                                <small class="text-muted">Family Vacation</small>
+                            </div>
+                        </div>
+                        <div class="testimonial-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-half"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            "Perfect for families! The kids loved the facilities and we enjoyed the peaceful atmosphere. Great value for money and excellent location near all the attractions."
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="testimonial-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+                                class="testimonial-avatar me-3" alt="Michael Chen">
+                            <div>
+                                <h6 class="testimonial-author">Michael Chen</h6>
+                                <small class="text-muted">Couple's Getaway</small>
+                            </div>
+                        </div>
+                        <div class="testimonial-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            "Romantic and serene! The perfect place for a couple's retreat. Beautiful views, excellent dining, and the spa services were absolutely divine. Highly recommended!"
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Reach Us -->
+
+    <?php
+    $contact_q = "SELECT * FROM `contact_details` WHERE `sr_no` =?";
+    $values = [1];
+    $contact_r = mysqli_fetch_assoc(select($contact_q, $values, 'i'));
+
+    ?>
+    <!-- Contact Section -->
+    <div class="contact">
+        <div class="container">
+            <h2 class="section-title text-center mb-5 text-white">GET IN TOUCH</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="map-container">
+                        <iframe class="w-100" height="450" src="<?php echo $contact_r['iframe'] ?>"
+                            loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="contact-card mb-4">
+                        <div class="contact-icon">
+                            <i class="bi bi-telephone-fill"></i>
+                        </div>
+                        <h5 class="text-white mb-3">Call Us</h5>
+                        <a href="tel: +<?php echo $contact_r['pn1'] ?>" class="d-block mb-2 text-white text-decoration-none">
+                            <i class="bi bi-telephone me-2"></i>+<?php echo $contact_r['pn1'] ?>
+                        </a>
+                        <?php
+                        if ($contact_r['pn2'] != '') {
+                            echo <<<data
+                            <a href="tel: +$contact_r[pn2]" class="d-block text-white text-decoration-none">
+                                <i class="bi bi-telephone me-2"></i>+$contact_r[pn2]
+                            </a>
+data;
+                        }
+                        ?>
+                    </div>
+
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="bi bi-share-fill"></i>
+                        </div>
+                        <h5 class="text-white mb-3">Follow Us</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <?php
+                            if ($contact_r['fb'] != '') {
+                                echo <<<data
+                                <a href="$contact_r[fb]" class="social">
+                                    <i class="bi bi-facebook"></i>
+                                </a>
+data;
+                            }
+                            ?>
+                            <a href="<?php echo $contact_r['insta'] ?>" class="social">
+                                <i class="bi bi-instagram"></i>
+                            </a>
+                            <a href="#" class="social">
+                                <i class="bi bi-twitter"></i>
+                            </a>
+                            <a href="#" class="social">
+                                <i class="bi bi-youtube"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <br><br><br>
+    <br><br><br>
+
+
+    <?php require('inc/footer.php'); ?>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTop">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+
+
+</body>
+
+</html>
+<style>
+    .bg-light home-page {
+        padding: 80px 0;
+        background: #f8f9fa;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 4px;
+        background: linear-gradient(45deg, #007bff 0%, #0056b3 100%);
+        border-radius: 2px;
+    }
+
+    .room-slideshow-container {
+        position: relative;
+        margin: 0 auto;
+        max-width: 1000px;
+    }
+
+    .room-slideshow-card {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .room-slideshow-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+
+    .room-slide-content {
+        display: flex;
+        flex-direction: row;
+        min-height: 500px;
+        background: #ffffff;
+    }
+
+    .room-image-container {
+        position: relative;
+        width: 60%;
+        height: 500px;
+        overflow: hidden;
+    }
+
+    .room-slide-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .room-slideshow-card:hover .room-slide-image {
+        transform: scale(1.02);
+    }
+
+    .room-slide-info {
+        padding: 40px 30px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        width: 40%;
+        justify-content: center;
+        background: #ffffff;
+    }
+
+    .room-slide-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 20px;
+        line-height: 1.3;
+    }
+
+    .room-slide-price {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .room-slide-price h4 {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #007bff;
+        margin: 0;
+    }
+
+    .room-slide-price small {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 400;
+    }
+
+    .room-slide-features {
+        margin-bottom: 25px;
+    }
+
+    .room-slide-features h6 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 10px;
+        font-size: 1rem;
+    }
+
+    .badge {
+        background: #e9ecef;
+        color: #495057;
+        font-weight: 500;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        margin: 2px;
+    }
+
+    .room-slide-guests {
+        margin-bottom: 25px;
+    }
+
+    .room-slide-guests h6 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 10px;
+        font-size: 1rem;
+    }
+
+    .room-slide-description {
+        color: #6c757d;
+        line-height: 1.8;
+        margin-bottom: 40px;
+        flex-grow: 1;
+        font-size: 1.1rem;
+        font-weight: 400;
+    }
+
+    .room-slide-buttons {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-top: auto;
+    }
+
+    .btn-outline-primary {
+        border: 2px solid #2c3e50;
+        color: #2c3e50;
+        background: transparent;
+        padding: 12px 30px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-radius: 0;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-outline-primary:hover {
+        background: #2c3e50;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 62, 80, 0.3);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        border: none;
+        color: #ffffff;
+        padding: 12px 30px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-radius: 0;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 62, 80, 0.4);
+    }
+
+    .room-slide-indicators {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        padding: 40px 20px;
+        background: #ffffff;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .room-indicator {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: #dee2e6;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        border: 2px solid transparent;
+    }
+
+    .room-indicator.active {
+        background: #2c3e50;
+        transform: scale(1.3);
+        border: 2px solid #ffffff;
+        box-shadow: 0 0 0 2px #2c3e50;
+    }
+
+    .room-slide-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,0.95);
+        border: 2px solid #2c3e50;
+        width: 60px;
+        height: 60px;
+        border-radius: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: #2c3e50;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10;
+        font-weight: 600;
+    }
+
+    .room-slide-nav:hover {
+        background: #2c3e50

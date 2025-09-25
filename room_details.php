@@ -17,7 +17,6 @@ if (session_status() == PHP_SESSION_NONE) {
     <title>Leisure Coast Resort - ROOM-DETAILS</title>
     <?php require('inc/links.php'); ?>
 
-
     <style>
         body {
             font-family: var(--font-body);
@@ -923,11 +922,7 @@ if (session_status() == PHP_SESSION_NONE) {
             if (!data || !data.success) {
                 return;
             }
-            const {
-                reviews,
-                avg_rating,
-                count
-            } = data;
+            const { reviews, avg_rating, count } = data;
             if (typeof avg_rating !== 'undefined') {
                 if (count > 0) {
                     avgEl.style.display = '';

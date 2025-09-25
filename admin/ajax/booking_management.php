@@ -152,6 +152,17 @@ function createBooking($con, $input)
         }
     }
 
+    // Check for double booking
+    $conflict_check = checkBookingConflicts($con, $input['room_id'], $checkin, $checkout);
+    if (!$conflict_check['available']) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Selected dates are not available. There are conflicting bookings.',
+            'conflicting_bookings' => $conflict_check['conflicts']
+        ]);
+        return;
+    }
+
     // Calculate nights and total amount if not provided
     $nights = (strtotime($checkout) - strtotime($checkin)) / (60 * 60 * 24);
 
@@ -171,7 +182,7 @@ function createBooking($con, $input)
 
     // Begin transaction to ensure atomicity and avoid race conditions
     mysqli_begin_transaction($con);
-
+    
     // Lock any overlapping bookings for this room to prevent concurrent inserts
     $lock_q = "SELECT id, check_in, check_out FROM bookings 
                WHERE room_id = ? 
@@ -179,12 +190,12 @@ function createBooking($con, $input)
                AND removed = 0 
                AND (check_in < ? AND check_out > ?) 
                FOR UPDATE";
-
+    
     $lock_stmt = mysqli_prepare($con, $lock_q);
     mysqli_stmt_bind_param($lock_stmt, "iss", $input['room_id'], $checkout, $checkin);
     mysqli_stmt_execute($lock_stmt);
     $lock_res = mysqli_stmt_get_result($lock_stmt);
-
+    
     $conflicts = [];
     if ($lock_res) {
         while ($row = mysqli_fetch_assoc($lock_res)) {
@@ -195,7 +206,7 @@ function createBooking($con, $input)
             ];
         }
     }
-
+    
     if (!empty($conflicts)) {
         mysqli_rollback($con);
         echo json_encode([
@@ -205,7 +216,7 @@ function createBooking($con, $input)
         ]);
         return;
     }
-
+    
     // Check and lock unavailability in room_availability table
     $avail_q = "SELECT date FROM room_availability 
                 WHERE room_id = ? 
@@ -222,7 +233,7 @@ function createBooking($con, $input)
             $unavailable_dates[] = $row['date'];
         }
     }
-
+    
     if (!empty($unavailable_dates)) {
         mysqli_rollback($con);
         echo json_encode([
@@ -232,12 +243,12 @@ function createBooking($con, $input)
         ]);
         return;
     }
-
+    
     // Insert booking (idempotent by booking_token if provided)
     $status = $input['status'] ?? 'confirmed';
     $phone = $input['guest_phone'] ?? '';
     $special_requests = $input['special_requests'] ?? '';
-
+    
     if ($booking_token) {
         $insert_query = "INSERT INTO bookings (room_id, guest_name, guest_email, guest_phone, check_in, check_out, 
                          total_amount, booking_status, special_requests, booking_token, created_at) 
@@ -276,7 +287,7 @@ function createBooking($con, $input)
             $special_requests
         );
     }
-
+    
     if (mysqli_stmt_execute($stmt)) {
         $booking_id = mysqli_insert_id($con);
         mysqli_commit($con);

@@ -186,7 +186,6 @@ if (session_status() == PHP_SESSION_NONE) {
                 margin-top: 16px
             }
         }
-
         .booking-form {
             background: white;
             border-radius: 15px;

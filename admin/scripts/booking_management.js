@@ -203,7 +203,6 @@ async function createBooking() {
     const form = document.getElementById('createBookingForm');
     const formData = new FormData(form);
     const createBtn = document.getElementById('createBookingBtn');
-
     const bookingData = {
         action: 'create_booking'
     };
