@@ -1,0 +1,6 @@
+# Scrub SendGrid API keys and hardcoded constants from history
+# Replace any SG.* style SendGrid API key with a placeholder
+regex:(?i)SG\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{20,}==>REDACTED
+
+# Replace hardcoded SENDGRID_API_KEY constant assignments with env-based read
+regex:(?i)define\(\s*['"]SENDGRID_API_KEY['"]\s*,\s*['"][^'\"]+['"]\s*\)\s*;==>define('SENDGRID_API_KEY', getenv('SENDGRID_API_KEY') ?: '')
