@@ -51,6 +51,15 @@ $rooms_result = mysqli_query($con, $rooms_query);
                     <?php endwhile; ?>
                 </select>
                 <input type="date" class="form-control" id="dateFilter" style="width: auto;">
+                <select class="form-select" id="sourceFilter" style="width: auto;">
+                    <option value="">All Sources</option>
+                    <option value="website">Website</option>
+                    <option value="admin">Admin</option>
+                    <option value="walk-in">Walk-in</option>
+                    <option value="phone">Phone</option>
+                    <option value="ota">OTA</option>
+                    <option value="other">Other</option>
+                </select>
             </div>
         </div>
 
@@ -63,6 +72,7 @@ $rooms_result = mysqli_query($con, $rooms_query);
                             <tr class="bg-dark text-light">
                                 <th>Booking ID</th>
                                 <th>Guest Name</th>
+                                <th>Source</th>
                                 <th>Room</th>
                                 <th>Check-in</th>
                                 <th>Check-out</th>
@@ -145,6 +155,20 @@ $rooms_result = mysqli_query($con, $rooms_query);
                                 </select>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Booking Source</label>
+                                <select class="form-select" name="booking_source">
+                                    <option value="">Select Source</option>
+                                    <option value="website">Website</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="walk-in">Walk-in</option>
+                                    <option value="phone">Phone</option>
+                                    <option value="ota">OTA</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">Special Requests</label>
                             <textarea class="form-control" name="special_requests" rows="3"></textarea>
@@ -200,6 +224,18 @@ $rooms_result = mysqli_query($con, $rooms_query);
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Total Amount</label>
                                 <input type="number" class="form-control" name="total_amount" step="0.01">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Booking Source</label>
+                                <select class="form-select" name="booking_source">
+                                    <option value="">Select Source</option>
+                                    <option value="website">Website</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="walk-in">Walk-in</option>
+                                    <option value="phone">Phone</option>
+                                    <option value="ota">OTA</option>
+                                    <option value="other">Other</option>
+                                </select>
                             </div>
                         </div>
                         <div class="mb-3">

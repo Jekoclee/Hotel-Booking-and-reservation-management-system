@@ -50,6 +50,9 @@ switch ($action) {
     case 'reject_refund':
         bm_rejectRefund($con, $input);
         break;
+    case 'get_dashboard_metrics':
+        getDashboardMetrics($con, $input);
+        break;
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;
@@ -79,6 +82,12 @@ function getBookings($con, $input)
         $params[] = $input['date_filter'];
         $params[] = $input['date_filter'];
         $types .= "ss";
+    }
+
+    if (!empty($input['source_filter'])) {
+        $where_conditions[] = "b.booking_source = ?";
+        $params[] = $input['source_filter'];
+        $types .= "s";
     }
 
     $where_clause = implode(" AND ", $where_conditions);
@@ -249,9 +258,31 @@ function createBooking($con, $input)
     $phone = $input['guest_phone'] ?? '';
     $special_requests = $input['special_requests'] ?? '';
     
+    $booking_source = isset($input['booking_source']) ? trim($input['booking_source']) : null;
+
     if ($booking_token) {
         $insert_query = "INSERT INTO bookings (room_id, guest_name, guest_email, guest_phone, check_in, check_out, 
-                         total_amount, booking_status, special_requests, booking_token, created_at) 
+                         total_amount, booking_status, special_requests, booking_token, booking_source, created_at) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+        $stmt = mysqli_prepare($con, $insert_query);
+        mysqli_stmt_bind_param(
+            $stmt,
+            "isssssdssss",
+            $input['room_id'],
+            $input['guest_name'],
+            $input['guest_email'],
+            $phone,
+            $checkin,
+            $checkout,
+            $total_amount,
+            $status,
+            $special_requests,
+            $booking_token,
+            $booking_source
+        );
+    } else {
+        $insert_query = "INSERT INTO bookings (room_id, guest_name, guest_email, guest_phone, check_in, check_out, 
+                         total_amount, booking_status, special_requests, booking_source, created_at) 
                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
         $stmt = mysqli_prepare($con, $insert_query);
         mysqli_stmt_bind_param(
@@ -266,25 +297,7 @@ function createBooking($con, $input)
             $total_amount,
             $status,
             $special_requests,
-            $booking_token
-        );
-    } else {
-        $insert_query = "INSERT INTO bookings (room_id, guest_name, guest_email, guest_phone, check_in, check_out, 
-                         total_amount, booking_status, special_requests, created_at) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-        $stmt = mysqli_prepare($con, $insert_query);
-        mysqli_stmt_bind_param(
-            $stmt,
-            "isssssdss",
-            $input['room_id'],
-            $input['guest_name'],
-            $input['guest_email'],
-            $phone,
-            $checkin,
-            $checkout,
-            $total_amount,
-            $status,
-            $special_requests
+            $booking_source
         );
     }
     
@@ -338,14 +351,15 @@ function updateBooking($con, $input)
     $params = [];
     $types = "";
 
-    $allowed_fields = ['guest_name', 'guest_email', 'guest_phone', 'booking_status', 'total_amount', 'special_requests'];
+    $allowed_fields = ['guest_name', 'guest_email', 'guest_phone', 'booking_status', 'total_amount', 'special_requests', 'booking_source'];
 
     foreach ($allowed_fields as $field) {
         if (isset($input[$field])) {
             $db_field = ($field === 'booking_status') ? 'booking_status' : $field;
             $update_fields[] = "$db_field = ?";
             $params[] = $input[$field];
-            $types .= "s";
+            // type inference: amount numeric, others string
+            $types .= ($field === 'total_amount') ? 'd' : 's';
         }
     }
 
@@ -493,4 +507,68 @@ function checkBookingConflicts($con, $room_id, $checkin, $checkout, $exclude_boo
         'available' => empty($conflicts),
         'conflicts' => $conflicts
     ];
+}
+
+function getDashboardMetrics($con, $input) {
+    // Arrivals and departures today
+    $arrivals_sql = "SELECT COUNT(*) AS cnt FROM bookings WHERE removed=0 AND booking_status IN ('confirmed','pending') AND DATE(check_in)=CURDATE()";
+    $departures_sql = "SELECT COUNT(*) AS cnt FROM bookings WHERE removed=0 AND booking_status IN ('confirmed','pending') AND DATE(check_out)=CURDATE()";
+    $arrivals = mysqli_fetch_assoc(mysqli_query($con, $arrivals_sql))['cnt'] ?? 0;
+    $departures = mysqli_fetch_assoc(mysqli_query($con, $departures_sql))['cnt'] ?? 0;
+
+    // Occupancy today
+    $total_rooms_sql = "SELECT COUNT(*) AS cnt FROM rooms WHERE status=1 AND removed=0";
+    $total_rooms = (int)(mysqli_fetch_assoc(mysqli_query($con, $total_rooms_sql))['cnt'] ?? 0);
+    $occupied_sql = "SELECT COUNT(DISTINCT room_id) AS cnt FROM bookings WHERE removed=0 AND booking_status IN ('confirmed','pending') AND check_in <= CURDATE() AND check_out > CURDATE()";
+    $occupied = (int)(mysqli_fetch_assoc(mysqli_query($con, $occupied_sql))['cnt'] ?? 0);
+    $occupancy_pct = ($total_rooms > 0) ? round(($occupied / $total_rooms) * 100, 2) : 0.0;
+
+    // ADR approximation: total revenue per night across active stays
+    $rev_nights_sql = "SELECT COALESCE(SUM(total_amount),0) AS total_rev, COALESCE(SUM(DATEDIFF(check_out, check_in)),0) AS total_nights FROM bookings WHERE removed=0 AND booking_status IN ('confirmed','pending') AND check_in <= CURDATE() AND check_out > CURDATE()";
+    $rn = mysqli_fetch_assoc(mysqli_query($con, $rev_nights_sql));
+    $total_rev = (float)($rn['total_rev'] ?? 0);
+    $total_nights = (int)($rn['total_nights'] ?? 0);
+    $adr = ($total_nights > 0) ? round($total_rev / $total_nights, 2) : 0.0;
+
+    // RevPAR basic approximation
+    $revpar = ($total_rooms > 0) ? round(($adr * ($occupancy_pct / 100)), 2) : 0.0;
+
+    // Top rooms (last 30 days by check-in)
+    $top_rooms = [];
+    $top_sql = "SELECT r.id AS room_id, r.name AS room_name, COUNT(*) AS bookings_count
+                FROM bookings b
+                JOIN rooms r ON r.id = b.room_id
+                WHERE b.removed=0 AND b.check_in >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                GROUP BY r.id, r.name
+                ORDER BY bookings_count DESC
+                LIMIT 5";
+    $res_top = mysqli_query($con, $top_sql);
+    if ($res_top) {
+        while ($row = mysqli_fetch_assoc($res_top)) { $top_rooms[] = $row; }
+    }
+
+    // Booking source distribution (last 30 days by created_at)
+    $sources = [];
+    $src_sql = "SELECT COALESCE(NULLIF(TRIM(booking_source), ''), 'unknown') AS source, COUNT(*) AS cnt
+                FROM bookings
+                WHERE removed=0 AND created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                GROUP BY source
+                ORDER BY cnt DESC";
+    $res_src = mysqli_query($con, $src_sql);
+    if ($res_src) {
+        while ($row = mysqli_fetch_assoc($res_src)) { $sources[] = $row; }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'data' => [
+            'arrivals_today' => (int)$arrivals,
+            'departures_today' => (int)$departures,
+            'occupancy_pct' => (float)$occupancy_pct,
+            'adr' => (float)$adr,
+            'revpar' => (float)$revpar,
+            'top_rooms' => $top_rooms,
+            'source_distribution' => $sources,
+        ]
+    ]);
 }

@@ -11,6 +11,9 @@ function setupEventListeners() {
     document.getElementById('statusFilter').addEventListener('change', loadBookings);
     document.getElementById('roomFilter').addEventListener('change', loadBookings);
     document.getElementById('dateFilter').addEventListener('change', loadBookings);
+    // Add booking source filter
+    const sourceFilter = document.getElementById('sourceFilter');
+    if (sourceFilter) sourceFilter.addEventListener('change', loadBookings);
 
     // Create booking form
     document.getElementById('createBookingBtn').addEventListener('click', createBooking);
@@ -20,7 +23,6 @@ function setupEventListeners() {
     const createForm = document.getElementById('createBookingForm');
     const checkinInput = createForm.querySelector('input[name="checkin_date"]');
     const checkoutInput = createForm.querySelector('input[name="checkout_date"]');
-    
     checkinInput.addEventListener('change', function() {
         validateBookingDates('create');
         // Set minimum checkout date to day after checkin
@@ -53,13 +55,15 @@ function setMinDates() {
     createForm.querySelector('input[name="checkout_date"]').min = tomorrowStr;
 }
 
-async function loadBookings() {
+async function loadBookings(page = 1) {
     try {
         const filters = {
             action: 'get_bookings',
             status_filter: document.getElementById('statusFilter').value,
             room_filter: document.getElementById('roomFilter').value,
-            date_filter: document.getElementById('dateFilter').value
+            date_filter: document.getElementById('dateFilter').value,
+            // include source filter
+            source_filter: document.getElementById('sourceFilter') ? document.getElementById('sourceFilter').value : ''
         };
 
         const response = await fetch('ajax/booking_management.php', {
@@ -87,7 +91,7 @@ async function loadBookings() {
 function displayBookings(bookings) {
     const tbody = document.getElementById('bookingsTableBody');
     if (!bookings || bookings.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="12" class="text-center">No bookings found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13" class="text-center">No bookings found</td></tr>';
         return;
     }
     tbody.innerHTML = bookings.map(b => {
@@ -106,6 +110,7 @@ function displayBookings(bookings) {
             <tr>
                 <td>#${b.id}</td>
                 <td>${b.guest_name || ''}</td>
+                <td>${b.booking_source || ''}</td>
                 <td>${b.room_name || 'N/A'}</td>
                 <td>${checkinDate}</td>
                 <td>${checkoutDate}</td>
@@ -485,4 +490,144 @@ async function rejectRefund(booking_id) {
   } else {
     showAlert('error', data.message || 'Failed to reject refund');
   }
+}
+
+// Add event listeners after DOMContentLoaded
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sourceFilter = document.getElementById('sourceFilter');
+  if (sourceFilter) {
+    sourceFilter.addEventListener('change', () => {
+      loadBookings();
+    });
+  }
+
+  // Set booking source in create form submission
+  const createForm = document.getElementById('createBookingForm');
+  if (createForm) {
+    createForm.addEventListener('submit', (e) => {
+      // augment existing handler by including booking_source
+      const sourceSel = createForm.querySelector('select[name="booking_source"]');
+      if (sourceSel) {
+        // no-op, data gathered below in create
+      }
+    });
+  }
+});
+
+function getBookingFormData(form) {
+  // existing utility to get data; if not present, assemble explicitly
+  const data = {
+    guest_name: form.querySelector('input[name="guest_name"]').value.trim(),
+    guest_email: form.querySelector('input[name="guest_email"]').value.trim(),
+    guest_phone: form.querySelector('input[name="guest_phone"]').value.trim(),
+    room_id: form.querySelector('select[name="room_id"]').value,
+    checkin_date: form.querySelector('input[name="checkin_date"]').value,
+    checkout_date: form.querySelector('input[name="checkout_date"]').value,
+    total_amount: form.querySelector('input[name="total_amount"]').value,
+    status: form.querySelector('select[name="status"]').value,
+    special_requests: form.querySelector('textarea[name="special_requests"]').value,
+  };
+  const sourceSel = form.querySelector('select[name="booking_source"]');
+  if (sourceSel && sourceSel.value) data.booking_source = sourceSel.value;
+  return data;
+}
+async function createBooking(form) {
+  const bookingData = getBookingFormData(form);
+  // Generate idempotency token per attempt and pass it to backend
+  // This prevents duplicate booking on repeated clicks/network retries
+  if (!bookingData.booking_token) {
+      const rand = Math.random().toString(36).slice(2);
+      const ts = Date.now().toString(36);
+      bookingData.booking_token = `adm_${ts}_${rand}`;
+  }
+  
+  try {
+      // Disable button to prevent double submit
+      createBtn.disabled = true;
+      createBtn.textContent = 'Creating...';
+  
+      const response = await fetch('ajax/booking_management.php', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(bookingData)
+      });
+  
+      const data = await response.json();
+      
+      if (data.success) {
+          const idempNote = data.idempotent ? ' (idempotent)' : '';
+          showAlert('success', 'Booking created successfully!' + idempNote);
+          bootstrap.Modal.getInstance(document.getElementById('createBookingModal')).hide();
+          form.reset();
+          setMinDates();
+          loadBookings();
+      } else {
+          showAlert('error', data.message);
+      }
+  } catch (error) {
+      console.error('Error creating booking:', error);
+      showAlert('error', 'Error creating booking. Please try again.');
+  } finally {
+      createBtn.disabled = false;
+      createBtn.textContent = 'Create Booking';
+  }
+}
+
+function editBooking(bookingId) {
+    const booking = bookingsData.find(b => b.id == bookingId);
+    if (!booking) {
+        showAlert('error', 'Booking not found.');
+        return;
+    }
+
+    const form = document.getElementById('editBookingForm');
+    
+    // Populate form fields
+    form.querySelector('input[name="booking_id"]').value = booking.id;
+    form.querySelector('input[name="guest_name"]').value = booking.guest_name;
+    form.querySelector('input[name="guest_email"]').value = booking.guest_email;
+    form.querySelector('input[name="guest_phone"]').value = booking.guest_phone || '';
+    form.querySelector('select[name="status"]').value = booking.booking_status;
+    form.querySelector('input[name="total_amount"]').value = booking.total_amount || '';
+    form.querySelector('textarea[name="special_requests"]').value = booking.special_requests || '';
+
+    // Clear validation message
+    document.getElementById('editBookingValidationMessage').className = 'alert d-none';
+
+    // Show modal
+    new bootstrap.Modal(document.getElementById('editBookingModal')).show();
+}
+
+async function updateBooking(form) {
+  const bookingData = getBookingFormData(form);
+  bookingData.action = 'updateBooking';
+  bookingData.id = form.querySelector('input[name="booking_id"]').value;
+  // ... existing code to send
+}
+
+function renderBookingRow(b) {
+  // ensure source column is rendered
+  return `
+    <tr>
+      <td>${b.id}</td>
+      <td>${b.guest_name}</td>
+      <td>${b.booking_source || ''}</td>
+      <td>${b.room_name || ('#'+b.room_id)}</td>
+      <td>${b.checkin_date}</td>
+      <td>${b.checkout_date}</td>
+      <td>${b.nights}</td>
+      <td>${b.total_amount}</td>
+      <td>${b.status}</td>
+      <td>${b.payment_status || ''}</td>
+      <td>${b.refund_status || ''}</td>
+      <td>${b.created_at || ''}</td>
+      <td>
+        <button class="btn btn-sm btn-primary" onclick="openEditModal(${b.id})">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteBooking(${b.id})">Delete</button>
+      </td>
+    </tr>
+  `;
 }

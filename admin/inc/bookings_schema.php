@@ -46,5 +46,10 @@ if (!function_exists('ensureBookingsSchema')) {
             // Add unique index to enforce idempotency (safe to ignore error if already exists)
             @mysqli_query($con, "ALTER TABLE bookings ADD UNIQUE KEY booking_token_unique (booking_token)");
         }
+
+        // Booking source (e.g. website, admin, walk-in, phone, ota, other)
+        if (!$hasCol('booking_source')) {
+            @mysqli_query($con, "ALTER TABLE bookings ADD COLUMN booking_source VARCHAR(32) NULL AFTER booking_token");
+        }
     }
 }
